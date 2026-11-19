@@ -1,0 +1,39 @@
+@font-face {
+  font-family: "Playpen Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/PlaypenSans-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playpen Sans";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/PlaypenSans-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playpen Sans";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../assets/fonts/PlaypenSans-ExtraBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/SpaceMono-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/SpaceMono-Bold.woff2") format("woff2");
+}

@@ -1,0 +1,97 @@
+.neo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px solid var(--color-ink);
+  border-radius: 0.65rem;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: var(--shadow-brutal-sm);
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.12s ease-out,
+    background-color 0.12s ease-out;
+  user-select: none;
+}
+
+.neo-btn:hover:not(:disabled) {
+  box-shadow: 5px 5px 0 0 var(--color-ink);
+}
+
+.neo-btn:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 0 var(--color-ink);
+}
+
+.neo-btn:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.neo-btn-primary {
+  background: var(--color-lemon);
+}
+
+.neo-btn-start {
+  background: var(--color-mint);
+}
+
+.neo-btn-ghost {
+  background: transparent;
+  box-shadow: none;
+}
+
+.neo-btn-ghost:hover:not(:disabled) {
+  background: var(--color-cream-deep);
+  box-shadow: none;
+}
+
+.neo-btn-ghost:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+
+.neo-card {
+  border: 3px solid var(--color-ink);
+  border-radius: 0.9rem;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-brutal);
+}
+
+.neo-panel {
+  border: 2px solid var(--color-ink);
+  border-radius: 0.65rem;
+  background: var(--color-paper);
+}
+
+.neo-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sticker {
+  display: inline-block;
+  border: 2px solid var(--color-ink);
+  box-shadow: var(--shadow-brutal-xs);
+  padding: 0.2rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.screen-grid {
+  background-color: var(--color-screen);
+  background-image:
+    linear-gradient(to right, rgba(243, 231, 204, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(243, 231, 204, 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
