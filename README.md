@@ -34,7 +34,7 @@ Classic stops at level ten. Endless keeps going at the top of the curve and has 
 There are also 5 difficulty levels which decide what props are shown to you on scrren, like the blockers, reflectors and absorbers.
 
 
-## run it
+## Self-Host
 
 ```bash
 npm install
