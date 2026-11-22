@@ -30,6 +30,7 @@ export function scoreRound(
   roundNumber: number,
   segments: Segment[],
   inkUsed = 0,
+  requiredBounces = 0,
 ): RoundResult {
   const hits = results.filter((r) => r.hit).length;
   const total = results.length;
@@ -51,7 +52,8 @@ export function scoreRound(
   }
 
   if (perfect) totalScore += 1500;
-  totalScore += Math.max(0, 4 - bounces) * 80;
+  // Depth pays: a page that asks for more reflections is worth more per hit.
+  totalScore += Math.min(bounces, Math.max(0, requiredBounces)) * 60;
   totalScore += Math.max(0, 3 - ink) * 150;
 
   const overallAccuracy =

@@ -37,7 +37,7 @@
     <ul class="help-steps">
       <li><strong>Study</strong> the targets before they blink away.</li>
       <li><strong>Drag</strong> to aim. Shift is a fine step.</li>
-      <li><strong>Trace</strong> spends one ink for the full line. Three a page.</li>
+      <li><strong>Trace</strong> spends one ink for the full line. Three a run.</li>
       <li><strong>Fire</strong> once. Hit the quota or lose a mistake.</li>
     </ul>
 

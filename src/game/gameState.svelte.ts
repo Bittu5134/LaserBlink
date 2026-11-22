@@ -386,7 +386,7 @@ export class GameController {
   }
 
   private buildResult(evaluated: TargetResult[], shotSegments: Segment[]): RoundResult {
-    const base = scoreRound(evaluated, this.round, shotSegments, this.inkUsed);
+    const base = scoreRound(evaluated, this.round, shotSegments, this.inkUsed, this.plan?.requiredBounces ?? 0);
 
     // The generated page owns the quota; fall back to scoring's if it is missing.
     const requiredHits = this.plan?.requiredHits ?? base.requiredHits;

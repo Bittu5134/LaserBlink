@@ -61,6 +61,7 @@ export interface RoundPlan {
   studySeconds: number;
   solutionAngle: number;
   requiredHits: number;
+  requiredBounces: number;
   angTolerance: number;
   mirrors: Mirror[];
   pieces: RectPiece[];

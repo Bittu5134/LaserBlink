@@ -84,16 +84,17 @@ describe('scoreRound', () => {
     expect(scored.passed).toBe(true);
   });
 
-  it('uses fewer-bounce and unused-ink bonuses', () => {
+  it('pays for reflection depth and unspent ink', () => {
     const results = [fakeResult(true, 1)];
-    const clean = scoreRound(results, 1, path(100), 0);
-    const bouncy = scoreRound(results, 1, bouncedPath(), 0);
-    const inky = scoreRound(results, 1, path(100), 3);
+    const shallow = scoreRound(results, 1, path(100), 0, 1);
+    const deep = scoreRound(results, 1, bouncedPath(), 0, 4);
+    const inky = scoreRound(results, 1, path(100), 3, 1);
 
-    expect(clean.bounces).toBe(0);
-    expect(bouncy.bounces).toBe(1);
-    expect(clean.score - bouncy.score).toBe(80);
-    expect(clean.score - inky.score).toBe(450);
+    expect(shallow.bounces).toBe(0);
+    expect(deep.bounces).toBe(1);
+    // Depth pays up to the reflections the shot actually used.
+    expect(deep.score - shallow.score).toBe(60);
+    expect(shallow.score - inky.score).toBe(450);
     expect(inky.inkUsed).toBe(3);
   });
 

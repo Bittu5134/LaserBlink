@@ -37,7 +37,7 @@
         aria-pressed={mode === 'notebook'}
         onclick={() => (mode = 'notebook')}
       >
-        Notebook
+        Classic
       </button>
       <button
         class="mode-btn"
@@ -71,9 +71,9 @@
     </button>
 
     <div class="run-row">
-      <label class="run-label" for="run-code">Run code</label>
+      <label class="run-label" for="game-code">Game code</label>
       <input
-        id="run-code"
+        id="game-code"
         class="run-input"
         bind:value={seed}
         maxlength="24"

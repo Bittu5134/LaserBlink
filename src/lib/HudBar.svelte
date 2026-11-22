@@ -17,17 +17,17 @@
     game.phase === 'study'
       ? `Study phase. ${targetCount} targets.`
       : game.phase === 'aim'
-        ? `Aim phase. Burn ${requiredHits} of ${targetCount} to pass this page.`
+        ? `Aim phase. Burn ${requiredHits} of ${targetCount} to pass.`
         : game.phase === 'firing'
           ? 'Laser firing.'
           : `Reveal. ${game.results?.hits ?? 0} of ${game.results?.total ?? targetCount} burned. ${
-              game.roundPassed ? 'Page passed.' : 'Page failed, one mistake used.'
+              game.roundPassed ? 'Passed.' : 'Failed, one mistake used.'
             }`,
   );
 </script>
 
 <aside class="rail rail-left">
-  <div class="chip page-chip" aria-label={`Page ${game.round}${game.mode === 'notebook' ? ` of ${RUN_LENGTH}` : ''}`}>
+  <div class="chip page-chip" aria-label={`Level ${game.round}${game.mode === 'notebook' ? ` of ${RUN_LENGTH}` : ''}`}>
     <span class="page-now">{String(game.round).padStart(2, '0')}</span>
     <span class="page-total">{game.mode === 'notebook' ? `/${RUN_LENGTH}` : 'endless'}</span>
   </div>

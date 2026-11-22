@@ -6,7 +6,7 @@
 </script>
 
 {#if result}
-  <aside class="result-mark" class:is-failed={!result.passed} aria-label={`Page result: ${result.grade}`}>
+  <aside class="result-mark" class:is-failed={!result.passed} aria-label={`Result: ${result.grade}`}>
     <div class="grade-line">
       <strong>{result.grade}</strong>
       <span class="stars" aria-label={`${result.stars} of 3 stars`}>

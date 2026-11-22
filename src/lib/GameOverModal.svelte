@@ -15,10 +15,10 @@
 
   const won = $derived(game.phase === 'victory');
   const title = $derived(
-    won ? 'Notebook complete' : game.mode === 'endless' ? 'Run over' : 'Out of mistakes',
+    won ? 'Run complete' : game.mode === 'endless' ? 'Run over' : 'Out of mistakes',
   );
   const modeLine = $derived(
-    `${game.mode === 'endless' ? 'Endless' : 'Notebook'} · page ${game.round} · difficulty ${game.difficulty}/5`,
+    `${game.mode === 'endless' ? 'Endless' : 'Classic'} · level ${game.round} · difficulty ${game.difficulty}/5`,
   );
 
   async function copyCode() {
@@ -62,20 +62,20 @@
     </dl>
 
     <div class="code-row">
-      <span class="code-label">Run code</span>
+      <span class="code-label">Game code</span>
       <code>{game.runSeed || 'none'}</code>
       <button
         class="copy"
         type="button"
         onclick={copyCode}
         disabled={!game.runSeed}
-        title="Copy run code"
-        aria-label={copied ? 'Run code copied' : 'Copy run code'}
+        title="Copy game code"
+        aria-label={copied ? 'Game code copied' : 'Copy game code'}
       >
         <Icon name={copied ? 'check' : 'copy'} size={17} />
       </button>
     </div>
-    <p class="sr-only" aria-live="polite">{copied ? 'Run code copied' : ''}</p>
+    <p class="sr-only" aria-live="polite">{copied ? 'Game code copied' : ''}</p>
 
     <div class="actions">
       <button class="btn btn-primary wide" type="button" onclick={onRetry}>

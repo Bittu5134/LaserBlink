@@ -33,8 +33,10 @@ export const PALETTE = [
   '#facc15', // 6: Golden Yellow
 ];
 
-const counts = [2, 3, 3, 4, 4, 5, 5, 6, 6, 7];
-const bounceCaps = [3, 3, 4, 4, 5, 5, 6, 6, 6, 7];
+// Reflections carry the difficulty: the page asks you to hold more bounces in
+// your head, and targets only creep up a little alongside them.
+const counts = [2, 2, 3, 3, 3, 4, 4, 4, 5, 5];
+const bounceCaps = [2, 3, 3, 4, 4, 5, 6, 7, 8, 9];
 const MIN_TOLERANCE = 0.02;
 const MAX_ATTEMPTS = 80;
 const EPS_ARENA = 0.001;
@@ -502,6 +504,7 @@ function generateCandidate(
     studySeconds: studySeconds(curve),
     solutionAngle: angle,
     requiredHits: requiredHitsFor(count),
+    requiredBounces: maxBounces,
     angTolerance: toleranceFor(player, targets),
     mirrors,
     pieces,
@@ -576,6 +579,7 @@ function fallbackPlan(
     studySeconds: studySeconds(curve),
     solutionAngle: angle,
     requiredHits: requiredHitsFor(count),
+    requiredBounces: maxBounces,
     angTolerance: toleranceFor(player, targets),
     mirrors,
     pieces,
@@ -629,6 +633,7 @@ export function validateRound(plan: RoundPlan): { valid: boolean; hits: number; 
 
   // The intended route never touches a dead zone, and it survives the whole field.
   if (trace.stopped === 'absorber') valid = false;
+  if (trace.bounces.length < plan.requiredBounces) valid = false;
   for (const absorber of absorbers) {
     if (!pathClearOfRect(trace.segments, absorber, 30)) valid = false;
   }

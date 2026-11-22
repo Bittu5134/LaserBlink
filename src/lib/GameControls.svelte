@@ -21,7 +21,7 @@
           ? 'Firing'
           : finished
             ? 'Finish'
-            : 'Next page',
+            : 'Next',
   );
 </script>
 

@@ -118,6 +118,40 @@ describe('generateRound', () => {
     }
   });
 
+  it('requires the solved route to thread its reflections', () => {
+    for (const runSeed of ['BOUNCE', 'DEPTH', 'WALLS']) {
+      for (let round = 1; round <= 10; round++) {
+        const plan = generateRound(round, runSeed);
+        const absorbers = plan.pieces.filter((p) => p.kind === 'absorber').map((p) => p.rect);
+        const traced = traceBeam(
+          plan.player,
+          plan.solutionAngle,
+          ARENA,
+          plan.obstacles,
+          plan.maxBounces,
+          plan.mirrors,
+          absorbers,
+        );
+        expect(plan.requiredBounces).toBe(plan.maxBounces);
+        expect(traced.bounces.length, `round ${round} seed ${runSeed}`).toBeGreaterThanOrEqual(
+          plan.requiredBounces,
+        );
+      }
+    }
+  });
+
+  it('raises the reflection count before the target count', () => {
+    for (const round of [2, 5, 9]) {
+      const calm = generateRound(round, 'AXIS', 1);
+      const normal = generateRound(round, 'AXIS', 3);
+      const wild = generateRound(round, 'AXIS', 5);
+      expect(wild.maxBounces).toBeGreaterThan(normal.maxBounces);
+      expect(normal.maxBounces).toBeGreaterThan(calm.maxBounces);
+      // Targets climb far more slowly than reflections do.
+      expect(wild.targets.length - calm.targets.length).toBeLessThanOrEqual(3);
+    }
+  });
+
   it('introduces blockers, absorbers and mirror counts on schedule', () => {
     for (let round = 1; round <= 10; round++) {
       const plan = generateRound(round, 'SCHEDULE');
