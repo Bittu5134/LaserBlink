@@ -4,7 +4,21 @@ import { evaluateShot, requiredHitsFor } from './scoring';
 import { angleOf, normalize, sub } from './vec';
 
 export const CANVAS = { w: 1000, h: 625 };
-export const ARENA: Rect = { x: 44, y: 44, w: 912, h: 537 };
+export const ARENA: Rect = { x: 2, y: 2, w: 996, h: 621 };
+
+// The canvas fills the viewport, so the logical field follows the window shape.
+// Geometry is only read while a page is generated, so mutating these in place
+// keeps the beam, the renderer and the UI pointed at the same field.
+export function setPlayfield(w: number, h: number) {
+  const width = Math.max(480, Math.round(w));
+  const height = Math.max(480, Math.round(h));
+  CANVAS.w = width;
+  CANVAS.h = height;
+  ARENA.x = 2;
+  ARENA.y = 2;
+  ARENA.w = width - 4;
+  ARENA.h = height - 4;
+}
 export const TARGET_RADIUS = 32;
 
 export const PALETTE = [
@@ -280,30 +294,67 @@ function mirrorOnPath(
   return null;
 }
 
-function absorberOnPath(
+// A dead zone that sits nowhere near the intended route: a bad shot dies in it.
+function absorberOffPath(
   segments: Segment[],
+  targets: Target[],
   player: Vec2,
-  count: number,
-  minDistance: number,
   obstacles: Rect[],
   mirrors: Mirror[],
   rng: () => number,
 ): Rect | null {
-  const total = pathLength(segments);
-  const floor = Math.max(count * 85 + 180, minDistance);
-  if (total < floor + 70) return null;
+  for (let i = 0; i < 40; i++) {
+    const w = 62 + rng() * 54;
+    const h = 30 + rng() * 24;
+    const rect: Rect = {
+      x: ARENA.x + 28 + rng() * Math.max(1, ARENA.w - w - 56),
+      y: ARENA.y + 28 + rng() * Math.max(1, ARENA.h - h - 56),
+      w,
+      h,
+    };
 
-  const distance = Math.min(total - 55, Math.max(floor, total * 0.82));
-  const point = pointAtDistance(segments, distance);
-  if (!point || !pointInArena(point, 55) || dist(point, player) < 220) return null;
+    if (!rectInsideArena(rect, 14)) continue;
+    if (!pathClearOfRect(segments, rect, 70)) continue;
 
-  const w = 58 + rng() * 26;
-  const h = 24 + rng() * 8;
-  const rect = { x: point.x - w / 2, y: point.y - h / 2, w, h };
-  if (!rectInsideArena(rect, 12)) return null;
-  if (obstacles.some((block) => rectsOverlap(rect, block, 20))) return null;
-  if (mirrors.some((mirror) => distanceToMirror(point, mirror) < 90)) return null;
-  return rect;
+    const center = { x: rect.x + w / 2, y: rect.y + h / 2 };
+    if (dist(center, player) < 150) continue;
+    if (targets.some((target) => pointInRect(target.pos, rect, target.radius + 26))) continue;
+    if (obstacles.some((block) => rectsOverlap(rect, block, 26))) continue;
+    if (mirrors.some((mirror) => rectNearMirror(rect, mirror, 30))) continue;
+    return rect;
+  }
+  return null;
+}
+
+function rectNearMirror(rect: Rect, mirror: Mirror, pad: number): boolean {
+  const [a, b] = mirrorEndpoints(mirror);
+  const along = Math.max(2, Math.ceil((Math.hypot(b.x - a.x, b.y - a.y) / 8)));
+  for (let i = 0; i <= along; i++) {
+    const t = i / along;
+    const x = a.x + (b.x - a.x) * t;
+    const y = a.y + (b.y - a.y) * t;
+    if (x > rect.x - pad && x < rect.x + rect.w + pad && y > rect.y - pad && y < rect.y + rect.h + pad) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// True when no point of the route comes within pad of the rect.
+function pathClearOfRect(segments: Segment[], rect: Rect, pad: number): boolean {
+  for (const seg of segments) {
+    const len = dist(seg.a, seg.b);
+    const steps = Math.max(2, Math.ceil(len / 9));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = seg.a.x + (seg.b.x - seg.a.x) * t;
+      const y = seg.a.y + (seg.b.y - seg.a.y) * t;
+      if (x > rect.x - pad && x < rect.x + rect.w + pad && y > rect.y - pad && y < rect.y + rect.h + pad) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 function makeTargets(positions: Vec2[]): Target[] {
@@ -410,32 +461,18 @@ function generateCandidate(
     mirrors.push(mirror);
   }
 
+  const trace = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors);
+
+  const targets = placeTargetsOnPath(trace.segments, count, player, obstacles, mirrors, []);
+  if (targets.length < count) return null;
+
   const absorbers: Rect[] = [];
   if (round >= 7) {
-    const beforeAbsorber = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors);
-    const lastPiece = Math.max(
-      0,
-      ...obstacles.map((rect) => distanceAlongPath(beforeAbsorber.segments, rectCenter(rect))),
-      ...mirrors.map((mirror) => distanceAlongPath(beforeAbsorber.segments, mirror.center)),
-    );
-    const absorber = absorberOnPath(
-      beforeAbsorber.segments,
-      player,
-      count,
-      lastPiece + 80,
-      obstacles,
-      mirrors,
-      rng,
-    );
+    // A hazard parked away from the solved route. It only catches bad shots.
+    const absorber = absorberOffPath(trace.segments, targets, player, obstacles, mirrors, rng);
     if (!absorber) return null;
     absorbers.push(absorber);
   }
-
-  const trace = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors, absorbers);
-  if (round >= 7 && trace.stopped !== 'absorber') return null;
-
-  const targets = placeTargetsOnPath(trace.segments, count, player, obstacles, mirrors, absorbers);
-  if (targets.length < count) return null;
 
   const pieces: RectPiece[] = [
     ...obstacles.map((rect) => ({ rect, kind: 'block' as const })),
@@ -486,7 +523,8 @@ function fallbackPlan(round: number, seed: string, mirrorCount: number, obstacle
 
   const absorbers: Rect[] = [];
   if (round >= 7) {
-    absorbers.push({ x: ARENA.x + ARENA.w - 136, y: player.y - 14, w: 80, h: 28 });
+    // Parked above the horizontal fallback route, never on it.
+    absorbers.push({ x: ARENA.x + ARENA.w * 0.58, y: ARENA.y + 26, w: 92, h: 34 });
   }
 
   const trace = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors, absorbers);
@@ -495,7 +533,7 @@ function fallbackPlan(round: number, seed: string, mirrorCount: number, obstacle
   if (targets.length < count) {
     // Straight-line targets on the guaranteed horizontal first leg.
     const start = player.x + 130;
-    const end = absorbers.length > 0 ? absorbers[0].x - 60 : ARENA.x + ARENA.w - 60;
+    const end = ARENA.x + ARENA.w - 60;
     const step = count === 1 ? 0 : (end - start) / (count - 1);
     const positions = Array.from({ length: count }, (_, i) => ({
       x: count === 1 ? (start + end) / 2 : start + step * i,
@@ -568,6 +606,13 @@ export function validateRound(plan: RoundPlan): { valid: boolean; hits: number; 
     plan.mirrors,
     absorbers,
   );
+
+  // The intended route never touches a dead zone, and it survives the whole field.
+  if (trace.stopped === 'absorber') valid = false;
+  for (const absorber of absorbers) {
+    if (!pathClearOfRect(trace.segments, absorber, 30)) valid = false;
+  }
+
   const hits = evaluateShot(plan.targets, trace.segments).filter((result) => result.hit).length;
   if (hits !== plan.targets.length) valid = false;
 

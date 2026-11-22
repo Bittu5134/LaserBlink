@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ARENA, TARGET_RADIUS, createRunSeed, generateRound, seedForRound, targetCount, validateRound } from './level';
 import { traceBeam } from './beam';
 import { evaluateShot, requiredHitsFor } from './scoring';
-import type { Mirror, RoundPlan, Vec2 } from './types';
+import type { Mirror, Rect, RoundPlan, Vec2 } from './types';
 
 const RUN_SEEDS = Array.from({ length: 40 }, (_, i) => `BATCH${i.toString(36).toUpperCase()}`);
 const DIST_SEEDS = Array.from({ length: 200 }, (_, i) => `DIST${i.toString(36).toUpperCase()}`);
@@ -23,6 +23,12 @@ function distanceToMirror(p: Vec2, mirror: Mirror): number {
   const len2 = abx * abx + aby * aby;
   const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * abx + (p.y - a.y) * aby) / len2));
   return Math.hypot(p.x - (a.x + abx * t), p.y - (a.y + aby * t));
+}
+
+function distanceToRect(p: Vec2, rect: Rect): number {
+  const dx = Math.max(rect.x - p.x, 0, p.x - (rect.x + rect.w));
+  const dy = Math.max(rect.y - p.y, 0, p.y - (rect.y + rect.h));
+  return Math.hypot(dx, dy);
 }
 
 function planWithMirror(round: number): RoundPlan {
@@ -198,7 +204,7 @@ describe('generateRound', () => {
     expect(seen).toBeGreaterThan(0);
   });
 
-  it('stops late-page beams on their absorber', () => {
+  it('keeps absorbers off the solved route', () => {
     for (const runSeed of RUN_SEEDS) {
       for (const round of [7, 8, 9, 10]) {
         const plan = generateRound(round, runSeed);
@@ -212,7 +218,21 @@ describe('generateRound', () => {
           plan.mirrors,
           absorbers,
         );
-        expect(traced.stopped, `round ${round} seed ${runSeed}`).toBe('absorber');
+
+        expect(traced.stopped, `round ${round} seed ${runSeed}`).toBeUndefined();
+
+        for (const absorber of absorbers) {
+          for (const seg of traced.segments) {
+            expect(distanceToRect(seg.a, absorber)).toBeGreaterThan(30);
+            expect(distanceToRect(seg.b, absorber)).toBeGreaterThan(30);
+          }
+          for (const target of plan.targets) {
+            expect(
+              distanceToRect(target.pos, absorber),
+              `round ${round} seed ${runSeed} target clear of the dead zone`,
+            ).toBeGreaterThan(TARGET_RADIUS);
+          }
+        }
       }
     }
   });
