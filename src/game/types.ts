@@ -32,6 +32,18 @@ export interface Bounce {
   index: number;
 }
 
+// A finite reflective segment. angle is the direction of the panel itself.
+export interface Mirror {
+  center: Vec2;
+  halfLength: number;
+  angle: number;
+}
+
+export interface RectPiece {
+  rect: Rect;
+  kind: 'block' | 'absorber';
+}
+
 export interface TargetResult {
   target: Target;
   hit: boolean;
@@ -47,7 +59,12 @@ export interface RoundPlan {
   obstacles: Rect[];
   maxBounces: number;
   studySeconds: number;
-  solutionAngle?: number;
+  solutionAngle: number;
+  requiredHits: number;
+  angTolerance: number;
+  mirrors: Mirror[];
+  pieces: RectPiece[];
+  seed: string;
 }
 
 export interface RoundResult {
@@ -59,18 +76,27 @@ export interface RoundResult {
   segments: Segment[];
   hits: number;
   total: number;
+  requiredHits: number;
+  passed: boolean;
+  grade: string;
+  stars: number;
+  inkUsed: number;
+  bounces: number;
 }
 
 export interface Settings {
+  reducedMotion: boolean;
   sound: boolean;
-  assist: 'off' | 'stub' | 'full';
 }
 
 export interface RunSummary {
+  seed: string;
   score: number;
   highScore: number;
   round: number;
+  pagesCleared: number;
   accuracy: number;
   hits: number;
   targets: number;
+  bestStars: number;
 }

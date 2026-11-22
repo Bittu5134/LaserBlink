@@ -1,7 +1,11 @@
-import type { Rect, Vec2 } from './types';
+import type { Mirror, Rect, Vec2 } from './types';
 import { dot, sub } from './vec';
 
 const EPS = 0.000001;
+
+function cross(a: Vec2, b: Vec2): number {
+  return a.x * b.y - a.y * b.x;
+}
 
 export function rayCircle(origin: Vec2, dir: Vec2, center: Vec2, radius: number): number | null {
   const oc = sub(origin, center);
@@ -48,6 +52,31 @@ export function rayInsideArena(origin: Vec2, dir: Vec2, arena: Rect): { t: numbe
     if (!Number.isFinite(ty) || ty < EPS) return null;
     return { t: ty, normal: { x: 0, y: ny } };
   }
+}
+
+// Ray cast against a finite mirror segment. Reflection happens on either face.
+export function rayMirror(origin: Vec2, dir: Vec2, mirror: Mirror): { t: number; normal: Vec2 } | null {
+  if (!Number.isFinite(mirror.halfLength) || mirror.halfLength <= 0) return null;
+  if (!Number.isFinite(mirror.angle) || !Number.isFinite(mirror.center.x) || !Number.isFinite(mirror.center.y)) {
+    return null;
+  }
+
+  const along = { x: Math.cos(mirror.angle), y: Math.sin(mirror.angle) };
+  const denom = cross(dir, along);
+  if (Math.abs(denom) < EPS) return null;
+
+  const toCenter = sub(mirror.center, origin);
+  const t = cross(toCenter, along) / denom;
+  const u = cross(toCenter, dir) / denom;
+
+  if (t <= EPS || !Number.isFinite(t)) return null;
+  if (Math.abs(u) > mirror.halfLength + EPS) return null;
+
+  let normal = { x: -along.y, y: along.x };
+  if (dot(dir, normal) > 0) normal = { x: -normal.x, y: -normal.y };
+  // Avoid -0 leaking into callers and equality checks.
+  normal = { x: normal.x + 0, y: normal.y + 0 };
+  return { t, normal };
 }
 
 // Ray cast from OUTSIDE an obstacle rectangle hitting its exterior faces
