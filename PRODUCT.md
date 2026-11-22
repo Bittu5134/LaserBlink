@@ -25,6 +25,7 @@ Browser, mouse or touch or keyboard. Two modes: ten-level Classic with three mis
 ## Capabilities and Constraints
 
 - One shot per level. Quota is 60% of the targets.
+- Difficulty is a ceiling: levels climb the ramp and stop where the slider says.
 - Mirrors, rulers and absorbers change the route from the middle of the curve.
 - Assists are a run resource: three total, not three per level.
 - No codes or links: a run is self contained, and replay keeps the same fields.
