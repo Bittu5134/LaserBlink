@@ -35,10 +35,10 @@
     </header>
 
     <ul class="help-steps">
-      <li><strong>Study</strong> the targets before they blink away.</li>
+      <li><strong>Study</strong> the targets. They disappear.</li>
       <li><strong>Drag</strong> to aim. Shift is a fine step.</li>
       <li><strong>Assist</strong> shows the full reflected line. Three for a whole run.</li>
-      <li><strong>Fire</strong> once. Hit the quota or lose a mistake.</li>
+      <li><strong>Fire</strong> once. Miss the quota and it costs a mistake.</li>
     </ul>
 
     <div class="controls-block">

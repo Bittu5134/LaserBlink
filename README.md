@@ -2,57 +2,54 @@
 
 # Laser · Blink
 
-### **A memory game of paper targets and one reflecting laser line.**
+### A memory game of paper targets and one reflecting laser line.
+
 ### [Play now at laserblink.bittu.dev](https://laserblink.bittu.dev)
 
 <img src="static/screenshot.png" width="850" alt="LaserBlink menu" />
 
 </div>
 
-## How To Play
+## how to play
 
-- Each level shows a field of crumpled paper targets for a few seconds.
-- The targets blink away. You get one shot and must remember where they were.
-- Aim the laser; it reflects off the screen edges, rulers, and mirror strips.
-- Burn the quota to pass. A failed level costs one of your three mistakes.
-- Assist draws the whole reflected path. Three for the entire run, so spend it carefully.
-- A level you did not fully burn shows the expected path in blue pencil after the shot.
+Targets sit on the field for a few seconds, then vanish. You get one shot. The beam bounces off the screen edges, mirrors and rulers, and burns whatever paper it passes through.
 
-## Controls
+Classic is ten levels with three mistakes. Miss the quota and you lose one. The quota is 60% of the targets: two of three, five of seven.
 
-- Drag anywhere on the field to aim.
-- Left click, tap, or press `Space` to fire and to move on.
-- `Esc` opens the exit sheet: keep playing, replay the game, or go home.
-- `Left` / `Right` or `A` / `D` to turn the turret, hold `Shift` for fine steps.
-- `I` to spend an assist and see the full line.
-- `M` sound, `V` reduced motion, `F` fullscreen, `?` help, `Esc` closes help.
+When you don't burn everything, the route the level was built around shows up as a dashed blue line under your shot. That happens on any missed target, not only on a lost mistake.
 
-## Game Modes
+## controls
 
-- **Classic**: ten levels, three mistakes. Finish level ten to complete the run.
-- **Endless**: levels keep coming at the top of the difficulty curve. No mistake budget, you stop when you want.
+- drag anywhere to aim
+- left click, tap, or `Space` to fire and to advance
+- `←` `→` or `A` `D` turn the turret, `Shift` is the fine step
+- `I` spends an assist and shows the whole reflected line
+- `M` sound, `V` less motion, `F` fullscreen, `?` help
+- `Esc` opens the exit sheet
 
-A game code replays the same levels. It is generated per run and shown on the end screen.
+## modes
 
-## Difficulty
+Classic stops at level ten. Endless keeps going at the top of the curve and has no mistake budget, so you end it yourself instead of losing it.
 
-The slider has five stops and shifts the tuning curve by two levels per step, so Calm on level 5 plays like level 1, and Wild on level 1 already plays like level 5.
+Both modes take a game code. Same code, same field. The end sheet shows yours.
 
-Most of the difficulty is reflections. Higher stops ask the beam to turn more times before it can reach the targets, alongside a slower target count increase, a longer study window, and more field pieces:
+## difficulty
 
-- Rulers arrive early and act as solid reflectors.
-- Mirrors appear from the middle of the curve, zero to two per level.
-- Absorber patches appear late. They are parked away from the intended route, so only a bad shot dies in them.
+Five stops, and each one moves the tuning curve two levels, so Calm on level 5 plays like level 1 and Wild on level 1 plays like level 5.
 
-Difficulty is part of the seed. The same game code at the same difficulty rebuilds identical levels.
+Reflections carry most of it. Level 10 asks for nine turns; level 1 asks for two. Over that same span the target count creeps from 2 to 5, which is a much smaller change. Study time follows the target count. Rulers arrive early and bounce the beam, mirrors land mid curve at zero to two per level, absorbers show up late and are parked away from the route so only a bad shot dies in them.
 
-## How It Works
+Difficulty is part of the seed. `ABC123-7-d4` and `ABC123-7-d5` are different fields.
 
-Levels are generated, not authored. The generator picks a firing angle, traces the real beam through the field, checks that the solved route uses the required number of reflections, then places targets on that route. Before a level is served it is re-traced with the same physics the player uses, and any level that does not burn every target is rejected.
+## how a level gets made
 
-Scoring pays for accuracy, combo order, reflection depth, and ink you did not spend.
+Pick an angle, trace the beam through the walls and pieces, and check it turns as many times as the level asks for. Targets go on that path with spacing and clearance. Then the level is traced again with the same code the player fires through, and thrown away if it doesn't burn every target.
 
-## Run Locally
+Nothing is hand placed and nothing ships unchecked. The generator tries 80 angles before giving up, and the fallback it lands on is a plain horizontal field that also gets verified. Late levels hit that fallback about 2% of the time.
+
+Score comes from accuracy, combo order, reflection depth, and assists left unspent.
+
+## run it
 
 ```bash
 npm install
@@ -60,17 +57,20 @@ npm run dev
 ```
 
 ```bash
-npm test     # physics, generation, and scoring tests
+npm test
 npm run check
 npm run build
 ```
 
-## Known Rough Edges
+The tests cover the beam tracer, mirrors and absorbers, generator reproducibility, and scoring. They finish in under a second.
 
-- No online leaderboard. The high score lives in localStorage.
-- Endless mode holds at the hardest curve instead of ramping further.
-- All sound is synthesised with Web Audio, so there are no audio files to swap out.
+## still broken
 
-## Built Using
+- no online scores, the high score lives in localStorage
+- endless pins to the hardest curve rather than ramping forever
+- all audio is synthesised, so there are no files to replace
+- spending an assist is final for the level, there is no undo
 
-[Svelte 5](https://svelte.dev/) · [Vite](https://vitejs.dev/) · [Tailwind CSS](https://tailwindcss.com/) · Canvas 2D · Web Audio · [Vitest](https://vitest.dev/)
+## built with
+
+Svelte 5, Vite, Tailwind, Canvas 2D, Web Audio, Vitest.

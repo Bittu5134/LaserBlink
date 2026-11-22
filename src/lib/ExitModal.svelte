@@ -16,7 +16,7 @@
 <div class="veil" role="presentation">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exit-title">
     <header class="head">
-      <h2 id="exit-title">Leave the field?</h2>
+      <h2 id="exit-title">Leave?</h2>
       <button class="close" type="button" onclick={onResume} title="Close (Esc)" aria-label="Close">
         <Icon name="close" size={19} />
       </button>
