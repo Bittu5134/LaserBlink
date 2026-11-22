@@ -42,11 +42,10 @@ npm run dev
 ```
 
 ```bash
-npm test
 npm run check
 npm run build
 ```
 
 ## built with
 
-Svelte 5, Vite, Tailwind, Canvas 2D, Web Audio, Vitest.
+Svelte 5, Vite, Tailwind, Canvas 2D, Web Audio.
