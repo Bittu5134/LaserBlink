@@ -39,7 +39,7 @@ Reflections carry most of it. Level 10 asks for nine turns; level 1 asks for two
 
 ## how a level gets made
 
-Pick an angle, trace the beam through the walls and pieces, and check it turns as many times as the level asks for. Targets go on that path with spacing and clearance. Then the level is traced again with the same code the player fires through, and thrown away if it doesn't burn every target.
+Pick an angle, trace the beam through the walls and pieces, and check it turns as many times as the level asks for. Targets go on that path with spacing and clearance. Then it is traced again with the same tracer the game fires with, and thrown away if it doesn't burn every target.
 
 Nothing is hand placed and nothing ships unchecked. The generator tries 80 angles before giving up, and the fallback it lands on is a plain horizontal field that also gets verified. Late levels hit that fallback about 2% of the time.
 
