@@ -83,7 +83,7 @@
         Replay this run
       </button>
       <button class="btn" type="button" onclick={onNewRun}>New run</button>
-      <button class="btn btn-quiet" type="button" onclick={onMenu}>Cover</button>
+      <button class="btn btn-quiet" type="button" onclick={onMenu}>Home</button>
     </div>
   </div>
 </div>

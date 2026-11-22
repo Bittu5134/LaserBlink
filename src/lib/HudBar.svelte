@@ -44,8 +44,8 @@
   </div>
 
   <nav class="tools" aria-label="Game controls">
-    <button class="tool" type="button" onclick={onMenu} title="Cover" aria-label="Back to the cover">
-      <Icon name="menu" size={19} />
+    <button class="tool" type="button" onclick={onMenu} title="Home" aria-label="Back to the home screen">
+      <Icon name="home" size={19} />
     </button>
     <button class="tool" type="button" onclick={onHelp} title="How to play (?)" aria-label="How to play">
       <Icon name="help" size={19} />

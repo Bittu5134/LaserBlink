@@ -4,6 +4,7 @@
     | 'mute'
     | 'music'
     | 'motion'
+    | 'home'
     | 'fullscreen'
     | 'help'
     | 'close'
@@ -52,7 +53,10 @@
     <circle cx="6.7" cy="17.6" r="2.4" />
     <circle cx="15.7" cy="15.6" r="2.4" />
   {:else if name === 'motion'}
-    <path d="M3 12h4l2.2-6 3.6 12 2.2-6H21" />
+    <path d="M9 6.5v11M15 6.5v11" />
+  {:else if name === 'home'}
+    <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8.5Z" />
+    <path d="M9.5 20v-5.5h5V20" />
   {:else if name === 'fullscreen'}
     <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
   {:else if name === 'help'}
