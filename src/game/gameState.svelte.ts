@@ -61,6 +61,7 @@ export class GameController {
 
   private timerInterval: number | null = null;
   private animFrame: number | null = null;
+  private fireTimeout: number | null = null;
   private firingStartTime = 0;
   private lastTickSecond = -1;
   private pendingResult: RoundResult | null = null;
@@ -367,6 +368,12 @@ export class GameController {
     };
 
     this.animFrame = requestAnimationFrame(animateBeam);
+
+    // A hidden tab pauses animation frames. The shot still has to land, so the
+    // result is settled on a timer as well.
+    this.fireTimeout = window.setTimeout(() => {
+      if (this.phase === 'firing') this.finishFiring(roundRes);
+    }, BEAM_TRAVEL_MS + 240);
   }
 
   private buildResult(evaluated: TargetResult[], shotSegments: Segment[]): RoundResult {
@@ -463,6 +470,10 @@ export class GameController {
 
   clearTimers() {
     this.clearCountdown();
+    if (this.fireTimeout !== null) {
+      clearTimeout(this.fireTimeout);
+      this.fireTimeout = null;
+    }
     if (this.animFrame !== null) {
       cancelAnimationFrame(this.animFrame);
       this.animFrame = null;
