@@ -1,5 +1,5 @@
 import type { Phase, RoundPlan, RoundResult, Segment, Settings, TargetResult } from './types';
-import { ARENA, CANVAS, createRunSeed, generateRound } from './level';
+import { ARENA, CANVAS, clampDifficulty, createRunSeed, generateRound } from './level';
 import { traceBeam } from './beam';
 import { evaluateShot, gradeRound, scoreRound } from './scoring';
 import { sounds } from './audio';
@@ -8,6 +8,9 @@ import { distanceAlong } from './render/scene';
 import { totalPathLength } from './render/draw';
 
 export const RUN_LENGTH = 10;
+export type Mode = 'notebook' | 'endless';
+
+export const DIFFICULTY_LABELS = ['Calm', 'Easy', 'Normal', 'Tricky', 'Wild'];
 
 const MAX_INK = 3;
 const BEAM_TRAVEL_MS = 650;
@@ -44,6 +47,8 @@ export class GameController {
   roundPerfect = $state<boolean>(false);
 
   runSeed = $state<string>('');
+  mode = $state<Mode>('notebook');
+  difficulty = $state<number>(3);
   ink = $state<number>(MAX_INK);
   maxInk = MAX_INK;
   previewSegments = $state<Segment[]>([]);
@@ -119,14 +124,16 @@ export class GameController {
     }
   }
 
-  startGame(runSeed?: string) {
-    // First click of the run: unlock audio and start the notebook soundtrack.
+  startGame(options: { seed?: string; mode?: Mode; difficulty?: number } = {}) {
+    // First click of the run: unlock audio and start the soundtrack.
     sounds.playClick();
     sounds.startMusic();
     this.clearTimers();
     fx.reset();
 
-    this.runSeed = runSeed ?? createRunSeed();
+    this.mode = options.mode ?? this.mode;
+    this.difficulty = clampDifficulty(options.difficulty ?? this.difficulty);
+    this.runSeed = options.seed?.trim() || createRunSeed();
     this.runStartHighScore = this.highScore;
     this.round = 1;
     this.score = 0;
@@ -146,11 +153,10 @@ export class GameController {
   }
 
   retryGame() {
-    this.startGame(this.runSeed || undefined);
+    this.startGame({ seed: this.runSeed, mode: this.mode, difficulty: this.difficulty });
   }
 
   newRun() {
-    this.startGame();
     this.goToMenu();
   }
 
@@ -170,8 +176,11 @@ export class GameController {
     this.clearTimers();
     fx.reset();
 
-    this.round = Math.min(Math.max(1, roundNumber), RUN_LENGTH);
-    this.plan = generateRound(this.round, this.runSeed);
+    this.round =
+      this.mode === 'notebook'
+        ? Math.min(Math.max(1, roundNumber), RUN_LENGTH)
+        : Math.max(1, roundNumber);
+    this.plan = generateRound(this.round, this.runSeed, this.difficulty);
     this.fieldW = CANVAS.w;
     this.fieldH = CANVAS.h;
     this.angle = -Math.PI / 4;
@@ -439,7 +448,7 @@ export class GameController {
       this.endRun('gameover');
       return;
     }
-    if (this.round >= RUN_LENGTH) {
+    if (this.mode === 'notebook' && this.round >= RUN_LENGTH) {
       this.endRun('victory');
       return;
     }

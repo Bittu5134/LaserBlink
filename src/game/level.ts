@@ -87,8 +87,19 @@ export function createRunSeed(): string {
   return seed;
 }
 
-export function seedForRound(runSeed: string, round: number): string {
-  return `${runSeed}-${round}`;
+export function seedForRound(runSeed: string, round: number, difficulty = 3): string {
+  return `${runSeed}-${round}-d${clampDifficulty(difficulty)}`;
+}
+
+export function clampDifficulty(difficulty: number): number {
+  const value = Number.isFinite(difficulty) ? difficulty : 3;
+  return Math.min(5, Math.max(1, Math.round(value)));
+}
+
+// Difficulty slides the existing ramp instead of rewriting it: each step moves
+// the page two rungs along the same tuning curve.
+function curveRound(round: number, difficulty: number): number {
+  return Math.min(counts.length, Math.max(1, round + (clampDifficulty(difficulty) - 3) * 2));
 }
 
 function dist(a: Vec2, b: Vec2): number {
@@ -433,14 +444,15 @@ function rollObstacleCount(round: number, rng: () => number): number {
 }
 
 function generateCandidate(
-  round: number,
+  page: number,
+  curve: number,
   rng: () => number,
   seed: string,
   mirrorCount: number,
   obstacleCount: number,
 ): RoundPlan | null {
-  const count = targetCount(round);
-  const maxBounces = bounceCap(round);
+  const count = targetCount(curve);
+  const maxBounces = bounceCap(curve);
   const player = placePlayer(rng);
   const angle = rng() * Math.PI * 2;
 
@@ -469,7 +481,7 @@ function generateCandidate(
   if (targets.length < count) return null;
 
   const absorbers: Rect[] = [];
-  if (round >= 7) {
+  if (curve >= 7) {
     // A hazard parked away from the solved route. It only catches bad shots.
     const absorber = absorberOffPath(trace.segments, targets, player, obstacles, mirrors, rng);
     if (!absorber) return null;
@@ -482,12 +494,12 @@ function generateCandidate(
   ];
 
   const plan: RoundPlan = {
-    round,
+    round: page,
     targets,
     player,
     obstacles,
     maxBounces,
-    studySeconds: studySeconds(round),
+    studySeconds: studySeconds(curve),
     solutionAngle: angle,
     requiredHits: requiredHitsFor(count),
     angTolerance: toleranceFor(player, targets),
@@ -501,9 +513,15 @@ function generateCandidate(
 
 // A plain horizontal route with pieces parked away from it. Used only if every
 // seeded attempt fails, so a run can never wedge on a generated page.
-function fallbackPlan(round: number, seed: string, mirrorCount: number, obstacleCount: number): RoundPlan {
-  const count = targetCount(round);
-  const maxBounces = bounceCap(round);
+function fallbackPlan(
+  page: number,
+  curve: number,
+  seed: string,
+  mirrorCount: number,
+  obstacleCount: number,
+): RoundPlan {
+  const count = targetCount(curve);
+  const maxBounces = bounceCap(curve);
   const player = { x: ARENA.x + 100, y: ARENA.y + ARENA.h * 0.52 };
   const angle = 0;
 
@@ -524,7 +542,7 @@ function fallbackPlan(round: number, seed: string, mirrorCount: number, obstacle
   }
 
   const absorbers: Rect[] = [];
-  if (round >= 7) {
+  if (curve >= 7) {
     // Parked above the horizontal fallback route, never on it.
     absorbers.push({ x: ARENA.x + ARENA.w * 0.58, y: ARENA.y + 26, w: 92, h: 34 });
   }
@@ -550,12 +568,12 @@ function fallbackPlan(round: number, seed: string, mirrorCount: number, obstacle
   ];
 
   return {
-    round,
+    round: page,
     targets,
     player,
     obstacles,
     maxBounces,
-    studySeconds: studySeconds(round),
+    studySeconds: studySeconds(curve),
     solutionAngle: angle,
     requiredHits: requiredHitsFor(count),
     angTolerance: toleranceFor(player, targets),
@@ -621,17 +639,18 @@ export function validateRound(plan: RoundPlan): { valid: boolean; hits: number; 
   return { valid, hits, tolerance };
 }
 
-export function generateRound(round: number, runSeed = 'PLAY'): RoundPlan {
-  const safeRound = Math.max(1, Math.floor(round));
-  const seed = seedForRound(runSeed, safeRound);
+export function generateRound(round: number, runSeed = 'PLAY', difficulty = 3): RoundPlan {
+  const page = Math.max(1, Math.floor(round));
+  const curve = curveRound(page, difficulty);
+  const seed = seedForRound(runSeed, page, difficulty);
   const rng = mulberry32(hashSeed(seed));
-  const mirrorCount = rollMirrorCount(safeRound, rng);
-  const obstacleCount = rollObstacleCount(safeRound, rng);
+  const mirrorCount = rollMirrorCount(curve, rng);
+  const obstacleCount = rollObstacleCount(curve, rng);
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const plan = generateCandidate(safeRound, rng, seed, mirrorCount, obstacleCount);
+    const plan = generateCandidate(page, curve, rng, seed, mirrorCount, obstacleCount);
     if (plan) return plan;
   }
 
-  return fallbackPlan(safeRound, seed, mirrorCount, obstacleCount);
+  return fallbackPlan(page, curve, seed, mirrorCount, obstacleCount);
 }

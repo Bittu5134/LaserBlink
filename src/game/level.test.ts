@@ -40,10 +40,23 @@ function planWithMirror(round: number): RoundPlan {
 }
 
 describe('seeds', () => {
-  it('derives page seeds from a run seed', () => {
-    expect(seedForRound('ABCDEF', 1)).toBe('ABCDEF-1');
-    expect(seedForRound('ABCDEF', 10)).toBe('ABCDEF-10');
+  it('derives page seeds from a run seed and difficulty', () => {
+    expect(seedForRound('ABCDEF', 1)).toBe('ABCDEF-1-d3');
+    expect(seedForRound('ABCDEF', 10)).toBe('ABCDEF-10-d3');
     expect(seedForRound('ABCDEF', 1)).not.toBe(seedForRound('ABCDEF', 2));
+    expect(seedForRound('ABCDEF', 1, 1)).not.toBe(seedForRound('ABCDEF', 1, 5));
+  });
+
+  it('moves the tuning curve with difficulty', () => {
+    const calm = generateRound(5, 'DIFF', 1);
+    const normal = generateRound(5, 'DIFF', 3);
+    const wild = generateRound(5, 'DIFF', 5);
+
+    expect(calm.targets.length).toBeLessThan(normal.targets.length);
+    expect(wild.targets.length).toBeGreaterThan(normal.targets.length);
+    expect(wild.studySeconds).toBeGreaterThan(normal.studySeconds);
+    expect(calm.mirrors.length).toBe(0);
+    expect(wild.mirrors.length + wild.obstacles.length).toBeGreaterThan(0);
   });
 
   it('creates shareable run ids', () => {
