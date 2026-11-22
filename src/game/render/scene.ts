@@ -72,10 +72,10 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
     drawMirrors(ctx, plan.mirrors);
   }
   if (plan.pieces && plan.pieces.length > 0) {
-    // Block pieces mirror plan.obstacles, which are already drawn above;
-    // only the absorber patches need their own pass.
-    const absorbers = plan.pieces.filter((piece) => piece.kind === 'absorber');
-    for (const piece of absorbers) drawAbsorber(ctx, piece.rect, reducedMotion);
+    // Blocks mirror plan.obstacles, which are already drawn; absorbers need their own pass.
+    for (const piece of plan.pieces) {
+      if (piece.kind === 'absorber') drawAbsorber(ctx, piece.rect, reducedMotion);
+    }
   }
 
   if (s.phase === 'study') {

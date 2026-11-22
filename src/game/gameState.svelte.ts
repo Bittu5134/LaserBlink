@@ -1,5 +1,5 @@
 import type { Phase, RoundPlan, RoundResult, Segment, Settings, TargetResult } from './types';
-import { ARENA, CANVAS, clampDifficulty, createRunSeed, generateRound } from './level';
+import { ARENA, CANVAS, absorberRects, clampDifficulty, createRunSeed, generateRound } from './level';
 import { traceBeam } from './beam';
 import { evaluateShot, gradeRound, scoreRound } from './scoring';
 import { sounds } from './audio';
@@ -285,7 +285,7 @@ export class GameController {
 
   private trace(angle: number, maxBounces: number): Segment[] {
     if (!this.plan) return [];
-    const absorbers = this.plan.pieces.filter((p) => p.kind === 'absorber').map((p) => p.rect);
+    const absorbers = absorberRects(this.plan);
     const { segments } = traceBeam(
       this.plan.player,
       angle,

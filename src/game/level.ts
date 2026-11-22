@@ -587,6 +587,10 @@ function fallbackPlan(
   };
 }
 
+export function absorberRects(plan: RoundPlan): Rect[] {
+  return plan.pieces.filter((piece) => piece.kind === 'absorber').map((piece) => piece.rect);
+}
+
 export function validateRound(plan: RoundPlan): { valid: boolean; hits: number; tolerance: number } {
   const tolerance = plan.angTolerance;
   let valid =
@@ -620,7 +624,7 @@ export function validateRound(plan: RoundPlan): { valid: boolean; hits: number; 
     if (!pointInArena(a, -EPS_ARENA) || !pointInArena(b, -EPS_ARENA)) valid = false;
   }
 
-  const absorbers = plan.pieces.filter((piece) => piece.kind === 'absorber').map((piece) => piece.rect);
+  const absorbers = absorberRects(plan);
   const trace = traceBeam(
     plan.player,
     plan.solutionAngle,

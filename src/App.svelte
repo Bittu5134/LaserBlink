@@ -10,7 +10,7 @@
   import ExitModal from './lib/ExitModal.svelte';
   import { game } from './game/gameState.svelte';
   import { traceBeam } from './game/beam';
-  import { ARENA } from './game/level';
+  import { ARENA, absorberRects } from './game/level';
   import type { Segment } from './game/types';
 
   let showHelp = $state(false);
@@ -24,7 +24,7 @@
     const missed = Boolean(plan && game.results && game.results.hits < game.results.total);
 
     if (missed && plan && Number.isFinite(plan.solutionAngle)) {
-      const absorbers = plan.pieces.filter((piece) => piece.kind === 'absorber').map((piece) => piece.rect);
+      const absorbers = absorberRects(plan);
       solutionSegments = traceBeam(
         plan.player,
         plan.solutionAngle,
