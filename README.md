@@ -33,6 +33,12 @@ Classic stops at level ten. Endless keeps going at the top of the curve and has 
 
 There are also 5 difficulty levels which decide what props are shown to you on scrren, like the blockers, reflectors and absorbers.
 
+## how it works
+
+Nothing is drawn by hand. The game picks an angle, traces the beam through the walls and pieces using the same code it uses when you fire, and puts targets on that path. If the traced shot would miss anything, it throws the level away and tries another angle. That is why a level always has a solution.
+
+Five files run it: `beam.ts` and `ray.ts` are the physics, `level.ts` builds and checks a level, `scoring.ts` counts what burned, `gameState.svelte.ts` runs the phases, and `src/game/render` paints the one canvas.
+
 
 ## Self-Host
 
