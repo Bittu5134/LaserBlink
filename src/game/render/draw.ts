@@ -725,7 +725,7 @@ function drawMirror(ctx: CanvasRenderingContext2D, mirror: Mirror): void {
 }
 
 // Dark felt absorber patch: no reflection, diagonal hatch edge, dotted texture.
-function drawAbsorber(
+export function drawAbsorber(
   ctx: CanvasRenderingContext2D,
   rect: Rect,
   reducedMotion = false,
@@ -810,16 +810,3 @@ function drawAbsorber(
   ctx.restore();
 }
 
-export function drawPieces(
-  ctx: CanvasRenderingContext2D,
-  pieces: RectPiece[],
-  reducedMotion = false,
-): void {
-  for (const piece of pieces) {
-    if (piece.kind === 'absorber') {
-      drawAbsorber(ctx, piece.rect, reducedMotion);
-    } else {
-      drawRulerBlock(ctx, piece.rect);
-    }
-  }
-}

@@ -12,7 +12,7 @@ import {
   drawTrace,
   drawObstacles,
   drawMirrors,
-  drawPieces,
+  drawAbsorber,
   totalPathLength,
   INK,
 } from './draw';
@@ -75,7 +75,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
     // Block pieces mirror plan.obstacles, which are already drawn above;
     // only the absorber patches need their own pass.
     const absorbers = plan.pieces.filter((piece) => piece.kind === 'absorber');
-    if (absorbers.length > 0) drawPieces(ctx, absorbers, reducedMotion);
+    for (const piece of absorbers) drawAbsorber(ctx, piece.rect, reducedMotion);
   }
 
   if (s.phase === 'study') {
