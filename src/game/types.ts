@@ -1,4 +1,4 @@
-export type Phase = 'menu' | 'study' | 'aim' | 'firing' | 'reveal' | 'summary';
+export type Phase = 'menu' | 'study' | 'aim' | 'firing' | 'reveal' | 'gameover' | 'victory';
 
 export interface Vec2 {
   x: number;
@@ -17,6 +17,8 @@ export interface Target {
   pos: Vec2;
   radius: number;
   color: string;
+  spriteIndex: number;
+  burnt?: boolean;
 }
 
 export interface Segment {
@@ -54,25 +56,20 @@ export interface RoundResult {
   score: number;
   perfect: boolean;
   segments: Segment[];
+  hits: number;
+  total: number;
 }
 
 export interface Settings {
   sound: boolean;
-  assist: 'off' | 'stub';
-}
-
-export interface ScoreEntry {
-  name: string;
-  score: number;
-  accuracy: number;
-  round: number;
-  date: number;
+  assist: 'off' | 'stub' | 'full';
 }
 
 export interface RunSummary {
   score: number;
+  highScore: number;
+  round: number;
   accuracy: number;
-  rounds: RoundResult[];
   hits: number;
   targets: number;
 }
