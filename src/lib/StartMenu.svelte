@@ -201,7 +201,7 @@
     display: flex;
     align-items: center;
     gap: 0;
-    border: 1px solid rgba(251, 244, 227, 0.38);
+    border: 1px dashed rgba(251, 244, 227, 0.5);
     border-radius: 2px;
     overflow: hidden;
   }
@@ -240,6 +240,9 @@
     flex-wrap: wrap;
     gap: 8px 12px;
     max-width: 100%;
+    padding: 8px 14px;
+    border: 1px dashed rgba(251, 244, 227, 0.5);
+    border-radius: 2px;
   }
 
   .slider {
@@ -279,7 +282,7 @@
     min-height: 40px;
     padding: 2px 2px 5px;
     border: 0;
-    border-bottom: 1px solid rgba(251, 244, 227, 0.45);
+    border-bottom: 1px dashed rgba(251, 244, 227, 0.55);
     border-radius: 0;
     background: transparent;
     color: var(--color-paper);
