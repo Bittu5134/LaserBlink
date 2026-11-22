@@ -144,6 +144,7 @@ export class GameController {
     this.roundPerfect = false;
     this.bestStars = 0;
     this.totalInkUsed = 0;
+    this.ink = this.maxInk;
     this.newHighScore = false;
     this.results = null;
     this.roundPassed = false;
@@ -190,7 +191,6 @@ export class GameController {
     this.roundPassed = false;
     this.pendingResult = null;
 
-    this.ink = this.maxInk;
     this.inkUsed = 0;
     this.previewActive = false;
     this.previewSegments = [];
