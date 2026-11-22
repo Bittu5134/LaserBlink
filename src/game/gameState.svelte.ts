@@ -46,7 +46,7 @@ export class GameController {
   totalBallsBurned = $state<number>(0);
   roundPerfect = $state<boolean>(false);
 
-  runSeed = $state<string>('');
+  private runSeed = '';
   mode = $state<Mode>('notebook');
   difficulty = $state<number>(3);
   ink = $state<number>(MAX_INK);
@@ -127,7 +127,6 @@ export class GameController {
   startGame(options: { seed?: string; mode?: Mode; difficulty?: number } = {}) {
     // First click of the run: unlock audio and start the soundtrack.
     sounds.playClick();
-    sounds.startMusic();
     this.clearTimers();
     fx.reset();
 
@@ -163,8 +162,6 @@ export class GameController {
 
   goToMenu() {
     sounds.playClick();
-    sounds.stopMusic();
-    sounds.setScene('menu');
     this.clearTimers();
     this.pendingResult = null;
     this.previewActive = false;
@@ -202,7 +199,6 @@ export class GameController {
     this.studyEndsAt = performance.now() + this.plan.studySeconds * 1000;
     this.lastTickSecond = Math.ceil(this.studyCountdown);
 
-    sounds.setScene('study');
     sounds.playStudyTick(this.studyCountdown);
 
     const stepMs = 100;
@@ -225,7 +221,6 @@ export class GameController {
     if (this.phase !== 'study') return;
     this.clearCountdown();
     sounds.playBlink();
-    sounds.setScene('aim');
     this.phase = 'aim';
     this.studyCountdown = 0;
     this.studyEndsAt = 0;
@@ -417,7 +412,6 @@ export class GameController {
     this.phase = 'reveal';
     this.beamProgress = 1;
     this.markHitsBurned(roundRes.results);
-    sounds.setScene('reveal');
 
     this.score += roundRes.score;
     this.saveHighScore();
@@ -467,7 +461,6 @@ export class GameController {
     this.saveHighScore();
     this.newHighScore = beatHighScore;
     this.phase = phase;
-    sounds.setScene(phase);
 
     if (phase === 'victory') {
       sounds.playVictory();

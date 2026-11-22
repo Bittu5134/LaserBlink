@@ -16,7 +16,7 @@ A memory game. Study paper targets, then fire one reflected laser from memory. S
 
 ## Positioning
 
-Levels are generated along a real traced path and verified by the same beam code the player fires through, so nothing ships unsolvable. A game code rebuilds the same levels.
+Levels are generated along a real traced path and verified by the same beam code the player fires through, so nothing ships unsolvable.
 
 ## Operating Context
 
@@ -27,6 +27,7 @@ Browser, mouse or touch or keyboard. Two modes: ten-level Classic with three mis
 - One shot per level. Quota is 60% of the targets.
 - Mirrors, rulers and absorbers change the route from the middle of the curve.
 - Assists are a run resource: three total, not three per level.
+- No codes or links: a run is self contained, and replay keeps the same fields.
 - Fully synthesised audio, no sound files.
 - No backend. High score is localStorage.
 

@@ -6,6 +6,7 @@ import {
   drawArenaEdge,
   drawPageChrome,
   drawStudyCountdown,
+  drawStudyCountdownNumber,
   drawPaperBall,
   drawLaserTurret,
   drawLaserBeam,
@@ -84,6 +85,13 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
     for (const t of plan.targets) {
       drawPaperBall(ctx, t.pos, t.radius, t.spriteIndex, false);
     }
+    const remaining = Math.max(0, fraction * plan.studySeconds);
+    drawStudyCountdownNumber(
+      ctx,
+      { x: CANVAS.w / 2, y: CANVAS.h / 2 },
+      remaining,
+      Math.min(CANVAS.w, CANVAS.h) * 0.3,
+    );
   }
 
   if (s.phase === 'aim') {
@@ -129,13 +137,8 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
     }
   }
 
-  // While the field is being studied the turret idles around slowly; the aim
-  // direction and its arrow only exist once the shot is actually on you.
-  const idle = (performance.now() / 1000) * 0.55;
   const aiming = s.phase === 'aim';
-  const turretAngle = aiming || s.phase === 'firing' || s.phase === 'reveal' ? s.angle : idle;
-
-  drawLaserTurret(ctx, plan.player, turretAngle, aiming, s.phase === 'firing');
+  drawLaserTurret(ctx, plan.player, s.angle, aiming, s.phase === 'firing');
 
   // Embers, wisps and floating score text above everything else
   fx.drawParticles(ctx);

@@ -3,14 +3,13 @@
   import Icon from './Icon.svelte';
 
   interface Props {
-    onStart: (seed?: string) => void;
+    onStart: () => void;
     onHowToPlay: () => void;
     onFullscreen?: () => void;
   }
 
   let { onStart, onHowToPlay, onFullscreen }: Props = $props();
 
-  let seed = $state('');
   let mode = $state<Mode>(game.mode);
   let difficulty = $state(game.difficulty);
 
@@ -18,10 +17,9 @@
 
   function submit(event: SubmitEvent) {
     event.preventDefault();
-    const trimmed = seed.trim();
     game.mode = mode;
     game.difficulty = difficulty;
-    onStart(trimmed ? trimmed : undefined);
+    onStart();
   }
 </script>
 
@@ -69,20 +67,6 @@
       Play
       <Icon name="play" size={26} />
     </button>
-
-    <div class="run-row">
-      <label class="run-label" for="game-code">Game code</label>
-      <input
-        id="game-code"
-        class="run-input"
-        bind:value={seed}
-        maxlength="24"
-        placeholder="optional"
-        autocomplete="off"
-        autocapitalize="characters"
-        spellcheck="false"
-      />
-    </div>
   </form>
 
   <nav class="menu-tools" aria-label="Menu">
@@ -261,11 +245,6 @@
     color: var(--color-paper);
   }
 
-  .run-row {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
 
   .run-label {
     font-family: var(--font-mono);
@@ -275,32 +254,6 @@
     text-transform: uppercase;
     color: rgba(251, 244, 227, 0.68);
     white-space: nowrap;
-  }
-
-  .run-input {
-    width: min(180px, 46vw);
-    min-height: 40px;
-    padding: 2px 2px 5px;
-    border: 0;
-    border-bottom: 3px dashed rgba(251, 244, 227, 0.62);
-    border-radius: 0;
-    background: transparent;
-    color: var(--color-paper);
-    font-family: var(--font-mono);
-    font-size: 0.95rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  .run-input::placeholder {
-    color: rgba(251, 244, 227, 0.4);
-    letter-spacing: 0.02em;
-    text-transform: none;
-  }
-
-  .run-input:focus {
-    outline: none;
-    border-bottom-color: var(--color-paper);
   }
 
   .menu-tools {
@@ -358,15 +311,5 @@
       min-height: 68px;
     }
 
-    .run-row {
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-
-    .run-input {
-      width: min(260px, 72vw);
-      text-align: center;
-    }
   }
 </style>

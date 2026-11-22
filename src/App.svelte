@@ -165,7 +165,7 @@
 <main class="app" class:is-playing={game.phase !== 'menu'}>
   {#if game.phase === 'menu'}
     <StartMenu
-      onStart={(seed) => game.startGame({ seed })}
+      onStart={() => game.startGame()}
       onHowToPlay={() => (showHelp = true)}
       onFullscreen={toggleFullscreen}
     />

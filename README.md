@@ -31,15 +31,11 @@ When you don't burn everything, the route the level was built around shows up as
 
 Classic stops at level ten. Endless keeps going at the top of the curve and has no mistake budget, so you end it yourself instead of losing it.
 
-Both modes take a game code. Same code, same field. The end sheet shows yours.
-
 ## difficulty
 
 Five stops, and each one moves the tuning curve two levels, so Calm on level 5 plays like level 1 and Wild on level 1 plays like level 5.
 
 Reflections carry most of it. Level 10 asks for nine turns; level 1 asks for two. Over that same span the target count creeps from 2 to 5, which is a much smaller change. Study time follows the target count. Rulers arrive early and bounce the beam, mirrors land mid curve at zero to two per level, absorbers show up late and are parked away from the route so only a bad shot dies in them.
-
-Difficulty is part of the seed. `ABC123-7-d4` and `ABC123-7-d5` are different fields.
 
 ## how a level gets made
 

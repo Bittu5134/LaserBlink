@@ -9,8 +9,6 @@
     | 'close'
     | 'ink'
     | 'fire'
-    | 'copy'
-    | 'check'
     | 'play'
     | 'next'
     | 'star';
@@ -64,11 +62,8 @@
   {:else if name === 'fire'}
     <path d="M13 3.5c.4 3-2 4.6-3.3 6.3-1 1.3-.7 2.5.5 3.2-.1-1.6.8-2.8 2.1-3.5-.2 2.7 2.2 3.3 2.2 5.9a4.5 4.5 0 0 1-9 0c0-2.2 1.2-4 2.6-5.7C10.3 7.2 12.6 5.6 13 3.5Z" />
 
-  {:else if name === 'copy'}
-    <rect x="8" y="8" width="11" height="11" rx="1.5" />
-    <path d="M16 8V4.5H5V16h3.5" />
-  {:else if name === 'check'}
-    <path d="m5 12.5 4.5 4.5L19 6.5" />
+
+
   {:else if name === 'play'}
     <path d="M8 5.5 19 12 8 18.5v-13Z" />
   {:else if name === 'next'}

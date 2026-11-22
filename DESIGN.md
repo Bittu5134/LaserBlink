@@ -17,6 +17,9 @@ colors:
   pencil-blue: "#35617f"
   chip: "#1c130b"
   chip-text: "#fbf3e1"
+  paper-hi: "#fffaf0"
+  shade: "rgba(0, 0, 0, 0.16)"
+  scrim: "rgba(8, 6, 4, 0.74)"
 typography:
   display:
     fontFamily: "Playpen Sans, cursive"
@@ -48,6 +51,30 @@ typography:
     fontWeight: 700
     lineHeight: 1
     letterSpacing: "-0.04em"
+  control:
+    fontFamily: "Space Mono, monospace"
+    fontSize: "0.9375rem"
+    fontWeight: 800
+    lineHeight: 1.2
+    letterSpacing: "0.06em"
+  small:
+    fontFamily: "Space Mono, monospace"
+    fontSize: "0.875rem"
+    fontWeight: 800
+    lineHeight: 1.35
+    letterSpacing: "0.04em"
+  meta:
+    fontFamily: "Space Mono, monospace"
+    fontSize: "0.8125rem"
+    fontWeight: 800
+    lineHeight: 1.35
+    letterSpacing: "0.08em"
+  value:
+    fontFamily: "Space Mono, monospace"
+    fontSize: "1.05rem"
+    fontWeight: 800
+    lineHeight: 1.1
+    letterSpacing: "0em"
 rounded:
   none: "0px"
   mark: "2px"

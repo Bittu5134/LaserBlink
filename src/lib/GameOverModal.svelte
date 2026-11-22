@@ -10,9 +10,6 @@
 
   let { onRetry, onNewRun, onMenu }: Props = $props();
 
-  let copied = $state(false);
-  let copyTimer: ReturnType<typeof setTimeout> | undefined;
-
   const won = $derived(game.phase === 'victory');
   const title = $derived(
     won ? 'Run complete' : game.mode === 'endless' ? 'Run ended' : 'Out of mistakes',
@@ -21,17 +18,6 @@
     `${game.mode === 'endless' ? 'Endless' : 'Classic'} · level ${game.round} · difficulty ${game.difficulty}/5`,
   );
 
-  async function copyCode() {
-    if (!game.runSeed) return;
-    try {
-      await navigator.clipboard.writeText(game.runSeed);
-      copied = true;
-      clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => (copied = false), 1800);
-    } catch {
-      copied = false;
-    }
-  }
 </script>
 
 <div class="veil">
@@ -60,22 +46,6 @@
         <dd>{game.totalInkUsed}</dd>
       </div>
     </dl>
-
-    <div class="code-row">
-      <span class="code-label">Game code</span>
-      <code>{game.runSeed || 'none'}</code>
-      <button
-        class="copy"
-        type="button"
-        onclick={copyCode}
-        disabled={!game.runSeed}
-        title="Copy game code"
-        aria-label={copied ? 'Game code copied' : 'Copy game code'}
-      >
-        <Icon name={copied ? 'check' : 'copy'} size={17} />
-      </button>
-    </div>
-    <p class="sr-only" aria-live="polite">{copied ? 'Game code copied' : ''}</p>
 
     <div class="actions">
       <button class="btn btn-primary wide" type="button" onclick={onRetry}>
@@ -189,48 +159,6 @@
     font-family: var(--font-mono);
     font-size: 1.05rem;
     font-weight: 700;
-    color: var(--color-ink);
-  }
-
-  .code-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 0;
-  }
-
-  .code-label {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-ink-soft);
-  }
-
-  .code-row code {
-    flex: 1;
-    font-family: var(--font-mono);
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-  }
-
-  .copy {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    padding: 0;
-    border: 1px solid var(--color-paper-edge);
-    border-radius: 2px;
-    background: transparent;
-    color: var(--color-ink-soft);
-  }
-
-  .copy:hover:not(:disabled) {
-    border-color: var(--color-ink);
     color: var(--color-ink);
   }
 

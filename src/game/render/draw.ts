@@ -168,6 +168,34 @@ export function drawStudyCountdown(
   ctx.restore();
 }
 
+// Big stamped seconds in the middle of the field while the targets are up.
+export function drawStudyCountdownNumber(
+  ctx: CanvasRenderingContext2D,
+  center: Vec2,
+  remaining: number,
+  size: number,
+) {
+  const seconds = Math.max(1, Math.ceil(remaining));
+  const settle = Math.min(1, remaining % 1);
+
+  ctx.save();
+  ctx.translate(center.x, center.y);
+  ctx.rotate(-0.02);
+  ctx.scale(0.94 + settle * 0.06, 0.94 + settle * 0.06);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `800 ${Math.round(size)}px "Playpen Sans", sans-serif`;
+  ctx.lineJoin = 'round';
+
+  ctx.strokeStyle = 'rgba(24, 18, 12, 0.82)';
+  ctx.lineWidth = Math.max(6, size * 0.07);
+  ctx.strokeText(String(seconds), 0, 0);
+
+  ctx.fillStyle = '#fff6ea';
+  ctx.fillText(String(seconds), 0, 0);
+  ctx.restore();
+}
+
 // Crumpled paper ball using the preloaded sprite or a procedural fallback.
 export function drawPaperBall(
   ctx: CanvasRenderingContext2D,
