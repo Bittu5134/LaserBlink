@@ -150,7 +150,9 @@
     font-weight: 800;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    box-shadow: 5px 6px 0 rgba(12, 8, 5, 0.55);
+    box-shadow:
+      0 14px 26px -14px rgba(12, 8, 5, 0.72),
+      0 3px 7px rgba(12, 8, 5, 0.32);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
@@ -160,12 +162,16 @@
   .action:hover:not(:disabled) {
     background: #fffdf6;
     transform: translate(-1px, -2px);
-    box-shadow: 7px 8px 0 rgba(12, 8, 5, 0.55);
+    box-shadow:
+      0 18px 30px -14px rgba(12, 8, 5, 0.74),
+      0 4px 9px rgba(12, 8, 5, 0.34);
   }
 
   .action:active:not(:disabled) {
     transform: translate(3px, 3px);
-    box-shadow: 1px 2px 0 rgba(12, 8, 5, 0.55);
+    box-shadow:
+      0 4px 10px -6px rgba(12, 8, 5, 0.62),
+      0 1px 2px rgba(12, 8, 5, 0.3);
   }
 
   .action:disabled {

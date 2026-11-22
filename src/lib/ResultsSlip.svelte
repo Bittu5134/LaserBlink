@@ -44,8 +44,7 @@
     padding: 6px 14px;
     border: 1px solid rgba(251, 244, 227, 0.16);
     border-radius: 2px;
-    background: rgba(18, 12, 8, 0.64);
-    backdrop-filter: blur(2px);
+    background: rgba(24, 16, 10, 0.9);
     color: var(--color-paper);
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.62);
     pointer-events: none;

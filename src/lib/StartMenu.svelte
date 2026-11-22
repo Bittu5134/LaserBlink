@@ -172,7 +172,9 @@
     font-weight: 800;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.42);
+    box-shadow:
+      0 16px 28px -14px rgba(0, 0, 0, 0.62),
+      0 3px 8px rgba(0, 0, 0, 0.28);
     transform: rotate(-0.7deg);
     transition:
       transform 0.14s ease,
@@ -183,12 +185,16 @@
   .play-btn:hover {
     background: #fffaf0;
     transform: rotate(-0.7deg) translate(-1px, -2px);
-    box-shadow: 9px 9px 0 rgba(0, 0, 0, 0.44);
+    box-shadow:
+      0 20px 32px -14px rgba(0, 0, 0, 0.64),
+      0 4px 10px rgba(0, 0, 0, 0.3);
   }
 
   .play-btn:active {
     transform: rotate(-0.7deg) translate(3px, 3px);
-    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.42);
+    box-shadow:
+      0 6px 12px -8px rgba(0, 0, 0, 0.55),
+      0 1px 3px rgba(0, 0, 0, 0.25);
   }
 
   .mode-row {
