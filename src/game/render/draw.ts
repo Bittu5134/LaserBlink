@@ -14,12 +14,11 @@ export const PENCIL_BLUE = 'rgba(58, 96, 160, 0.72)';
 export const RULED_LINE = 'rgba(74, 114, 172, 0.16)';
 export const MARGIN_LINE = 'rgba(178, 102, 82, 0.17)';
 
-// Cardboard desk mat, muted scratchpad sheet and a quiet graph grid.
-export function drawScratchpadBackground(
+// The cardboard is the arena: one full-bleed surface, walls at the screen edge.
+export function drawArenaBackground(
   ctx: CanvasRenderingContext2D,
   w: number,
   h: number,
-  arena: { x: number; y: number; w: number; h: number },
 ) {
   const sprites = getSprites();
 
@@ -34,102 +33,39 @@ export function drawScratchpadBackground(
     }
   }
 
-  // Paper drop shadow
+  // Warm shadow falling in from the edges so the field reads as a lit surface.
+  const vignette = ctx.createRadialGradient(
+    w / 2, h / 2, Math.min(w, h) * 0.28,
+    w / 2, h / 2, Math.max(w, h) * 0.78,
+  );
+  vignette.addColorStop(0, 'rgba(24, 16, 9, 0)');
+  vignette.addColorStop(1, 'rgba(24, 16, 9, 0.42)');
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, w, h);
+
+  // Faint corrugation, so the surface is not a flat brown field.
   ctx.save();
-  ctx.fillStyle = 'rgba(20, 14, 10, 0.42)';
-  ctx.beginPath();
-  ctx.roundRect(arena.x + 8, arena.y + 10, arena.w, arena.h, 10);
-  ctx.fill();
-  ctx.restore();
-
-  // Paper sheet
-  ctx.save();
-  ctx.beginPath();
-  ctx.roundRect(arena.x, arena.y, arena.w, arena.h, 10);
-  ctx.clip();
-
-  if (sprites.scratchpad && sprites.scratchpad.complete) {
-    ctx.drawImage(sprites.scratchpad, arena.x, arena.y, arena.w, arena.h);
-    // The photo is only a paper grain now: mute it so its printed grid
-    // cannot fight the alignment grid drawn below.
-    ctx.fillStyle = 'rgba(249, 242, 218, 0.87)';
-    ctx.fillRect(arena.x, arena.y, arena.w, arena.h);
-  } else {
-    ctx.fillStyle = PAPER_YELLOW;
-    ctx.fillRect(arena.x, arena.y, arena.w, arena.h);
-  }
-
-  // Warm wash to unify the page
-  ctx.fillStyle = 'rgba(250, 238, 199, 0.12)';
-  ctx.fillRect(arena.x, arena.y, arena.w, arena.h);
-
-  // Graph paper: minor squares with a stronger line every fifth
-  const step = 25;
-  const startX = arena.x + ((arena.w % step) / 2);
-  const startY = arena.y + ((arena.h % step) / 2);
-
-  ctx.lineWidth = 0.75;
-  ctx.strokeStyle = 'rgba(72, 104, 128, 0.08)';
-  ctx.beginPath();
-  for (let x = startX; x <= arena.x + arena.w; x += step) {
-    if (((x - startX) / step) % 5 === 0) continue;
-    ctx.moveTo(x, arena.y);
-    ctx.lineTo(x, arena.y + arena.h);
-  }
-  for (let y = startY; y <= arena.y + arena.h; y += step) {
-    if (((y - startY) / step) % 5 === 0) continue;
-    ctx.moveTo(arena.x, y);
-    ctx.lineTo(arena.x + arena.w, y);
-  }
-  ctx.stroke();
-
+  ctx.strokeStyle = 'rgba(96, 64, 38, 0.09)';
   ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(72, 104, 128, 0.14)';
   ctx.beginPath();
-  for (let x = startX; x <= arena.x + arena.w; x += step) {
-    if (((x - startX) / step) % 5 !== 0) continue;
-    ctx.moveTo(x, arena.y);
-    ctx.lineTo(x, arena.y + arena.h);
-  }
-  for (let y = startY; y <= arena.y + arena.h; y += step) {
-    if (((y - startY) / step) % 5 !== 0) continue;
-    ctx.moveTo(arena.x, y);
-    ctx.lineTo(arena.x + arena.w, y);
+  for (let y = 36; y < h; y += 37) {
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y + 5);
   }
   ctx.stroke();
-
-  // Single notebook margin rule
-  ctx.strokeStyle = MARGIN_LINE;
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(arena.x + 58, arena.y);
-  ctx.lineTo(arena.x + 58, arena.y + arena.h);
-  ctx.stroke();
-
   ctx.restore();
+}
 
-  // Page border over the tape ends
+// The laser bounces here, so the edge has to read as a wall.
+export function drawArenaEdge(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.save();
-  const clipW = 78;
-  for (const tx of [arena.x + 120, arena.x + arena.w - 198]) {
-    ctx.fillStyle = 'rgba(243, 231, 190, 0.6)';
-    ctx.strokeStyle = 'rgba(56, 37, 24, 0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(tx, arena.y - 11);
-    ctx.lineTo(tx + clipW, arena.y - 12);
-    ctx.lineTo(tx + clipW - 4, arena.y + 5);
-    ctx.lineTo(tx + 3, arena.y + 6);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
+  ctx.strokeStyle = 'rgba(38, 24, 14, 0.72)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(1.5, 1.5, w - 3, h - 3);
 
-  ctx.strokeStyle = '#2b1b11';
-  ctx.lineWidth = 3.5;
-  ctx.beginPath();
-  ctx.roundRect(arena.x, arena.y, arena.w, arena.h, 10);
-  ctx.stroke();
+  ctx.strokeStyle = 'rgba(246, 232, 204, 0.14)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(5.5, 5.5, w - 11, h - 11);
   ctx.restore();
 }
 

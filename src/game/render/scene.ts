@@ -2,7 +2,8 @@ import type { Phase, RoundPlan, Segment, TargetResult, Vec2 } from '../types';
 import { ARENA, CANVAS } from '../level';
 import { closestOnPath, closestOnSegment } from '../vec';
 import {
-  drawScratchpadBackground,
+  drawArenaBackground,
+  drawArenaEdge,
   drawPageChrome,
   drawStudyCountdown,
   drawPaperBall,
@@ -27,6 +28,9 @@ export interface SceneState {
   results: TargetResult[] | null;
   beamProgress: number;
   studyCountdown: number;
+  // Wall-clock deadline for the study window. Drawing against it keeps the
+  // countdown ring smooth between controller ticks.
+  studyEndsAt?: number;
   previewActive: boolean;
   previewSegments: Segment[];
   solutionSegments: Segment[];
@@ -50,7 +54,8 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
 
   fx.setReducedMotion(reducedMotion);
 
-  drawScratchpadBackground(ctx, CANVAS.w, CANVAS.h, ARENA);
+  drawArenaBackground(ctx, CANVAS.w, CANVAS.h);
+  drawArenaEdge(ctx, CANVAS.w, CANVAS.h);
 
   const plan = s.plan;
   if (!plan) return;
@@ -74,7 +79,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
   }
 
   if (s.phase === 'study') {
-    const fraction = plan.studySeconds > 0 ? s.studyCountdown / plan.studySeconds : 0;
+    const fraction = studyFraction(s, plan.studySeconds);
     drawStudyCountdown(ctx, plan.player, fraction);
     for (const t of plan.targets) {
       drawPaperBall(ctx, t.pos, t.radius, t.spriteIndex, false);
@@ -124,16 +129,24 @@ export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
     }
   }
 
-  drawLaserTurret(
-    ctx,
-    plan.player,
-    s.angle,
-    s.phase === 'aim',
-    s.phase === 'firing',
-  );
+  // While the field is being studied the turret idles around slowly; the aim
+  // direction and its arrow only exist once the shot is actually on you.
+  const idle = (performance.now() / 1000) * 0.55;
+  const aiming = s.phase === 'aim';
+  const turretAngle = aiming || s.phase === 'firing' || s.phase === 'reveal' ? s.angle : idle;
+
+  drawLaserTurret(ctx, plan.player, turretAngle, aiming, s.phase === 'firing');
 
   // Embers, wisps and floating score text above everything else
   fx.drawParticles(ctx);
+}
+
+function studyFraction(s: SceneState, seconds: number): number {
+  if (seconds <= 0) return 0;
+  if (s.studyEndsAt && s.studyEndsAt > 0) {
+    return Math.max(0, Math.min(1, (s.studyEndsAt - performance.now()) / 1000 / seconds));
+  }
+  return Math.max(0, Math.min(1, s.studyCountdown / seconds));
 }
 
 function drawAccuracyDetails(ctx: CanvasRenderingContext2D, results: TargetResult[]): void {
