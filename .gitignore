@@ -8,5 +8,6 @@ dev-dist
 .pi
 temp
 
-PRODUCT.md
-.impeccable
+.impeccable/review
+.impeccable/mocks
+.impeccable/questions
