@@ -98,10 +98,16 @@ export function clampDifficulty(difficulty: number): number {
   return Math.min(5, Math.max(1, Math.round(value)));
 }
 
-// Difficulty slides the existing ramp instead of rewriting it: each step moves
-// the page two rungs along the same tuning curve.
+// The slider picks how far up the ramp this run is allowed to go. Levels climb
+// one rung at a time and stop at that ceiling.
+const ceilings = [3, 5, 7, 9, 10];
+
+export function difficultyCeiling(difficulty: number): number {
+  return ceilings[clampDifficulty(difficulty) - 1];
+}
+
 function curveRound(round: number, difficulty: number): number {
-  return Math.min(counts.length, Math.max(1, round + (clampDifficulty(difficulty) - 3) * 2));
+  return Math.max(1, Math.min(round, difficultyCeiling(difficulty)));
 }
 
 function dist(a: Vec2, b: Vec2): number {

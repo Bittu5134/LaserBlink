@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { ARENA, TARGET_RADIUS, createRunSeed, generateRound, seedForRound, targetCount, validateRound } from './level';
+import {
+  ARENA,
+  TARGET_RADIUS,
+  createRunSeed,
+  difficultyCeiling,
+  generateRound,
+  seedForRound,
+  targetCount,
+  validateRound,
+} from './level';
 import { traceBeam } from './beam';
 import { evaluateShot, requiredHitsFor } from './scoring';
 import type { Mirror, Rect, RoundPlan, Vec2 } from './types';
@@ -47,16 +56,28 @@ describe('seeds', () => {
     expect(seedForRound('ABCDEF', 1, 1)).not.toBe(seedForRound('ABCDEF', 1, 5));
   });
 
-  it('moves the tuning curve with difficulty', () => {
-    const calm = generateRound(5, 'DIFF', 1);
-    const normal = generateRound(5, 'DIFF', 3);
-    const wild = generateRound(5, 'DIFF', 5);
+  it('treats the picked difficulty as a ceiling the levels climb to', () => {
+    expect(difficultyCeiling(1)).toBe(3);
+    expect(difficultyCeiling(5)).toBe(10);
 
-    expect(calm.targets.length).toBeLessThan(normal.targets.length);
-    expect(wild.targets.length).toBeGreaterThan(normal.targets.length);
-    expect(wild.studySeconds).toBeGreaterThan(normal.studySeconds);
-    expect(calm.mirrors.length).toBe(0);
-    expect(wild.mirrors.length + wild.obstacles.length).toBeGreaterThan(0);
+    // Early levels start gentle whatever the ceiling is.
+    const early = [1, 3, 5].map((d) => generateRound(1, 'DIFF', d));
+    expect(new Set(early.map((p) => p.targets.length)).size).toBe(1);
+    expect(new Set(early.map((p) => p.maxBounces)).size).toBe(1);
+
+    // Later levels stop at the ceiling instead of running past it.
+    const calm = generateRound(9, 'DIFF', 1);
+    const normal = generateRound(9, 'DIFF', 3);
+    const wild = generateRound(9, 'DIFF', 5);
+    expect(calm.maxBounces).toBeLessThan(normal.maxBounces);
+    expect(normal.maxBounces).toBeLessThan(wild.maxBounces);
+    expect(calm.targets.length).toBeLessThan(wild.targets.length);
+
+    // Nothing ever exceeds the ceiling it was generated with.
+    for (const d of [1, 2, 3, 4, 5]) {
+      const plan = generateRound(12, 'CEILING', d);
+      expect(plan.maxBounces).toBeLessThanOrEqual(difficultyCeiling(d));
+    }
   });
 
   it('creates shareable run ids', () => {
@@ -88,7 +109,7 @@ describe('generateRound', () => {
 
   it('builds designed, solvable pages across all ten difficulties', () => {
     for (let round = 1; round <= 10; round++) {
-      const count = targetCount(round);
+      const count = targetCount(Math.min(round, difficultyCeiling(3)));
       for (const runSeed of RUN_SEEDS) {
         const plan = generateRound(round, runSeed);
         const check = validateRound(plan);
@@ -141,15 +162,15 @@ describe('generateRound', () => {
   });
 
   it('raises the reflection count before the target count', () => {
-    for (const round of [2, 5, 9]) {
-      const calm = generateRound(round, 'AXIS', 1);
-      const normal = generateRound(round, 'AXIS', 3);
-      const wild = generateRound(round, 'AXIS', 5);
-      expect(wild.maxBounces).toBeGreaterThan(normal.maxBounces);
-      expect(normal.maxBounces).toBeGreaterThan(calm.maxBounces);
-      // Targets climb far more slowly than reflections do.
-      expect(wild.targets.length - calm.targets.length).toBeLessThanOrEqual(3);
-    }
+    const calm = generateRound(10, 'AXIS', 1);
+    const normal = generateRound(10, 'AXIS', 3);
+    const wild = generateRound(10, 'AXIS', 5);
+
+    expect(calm.maxBounces).toBe(3);
+    expect(normal.maxBounces).toBe(6);
+    expect(wild.maxBounces).toBe(9);
+    // Targets climb far more slowly than reflections do.
+    expect(wild.targets.length - calm.targets.length).toBeLessThanOrEqual(3);
   });
 
   it('introduces blockers, absorbers and mirror counts on schedule', () => {
