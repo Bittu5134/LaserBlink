@@ -1,97 +1,120 @@
-.neo-btn {
+.app {
+  position: relative;
+  min-height: 100dvh;
+  padding: clamp(8px, 1.2vw, 16px) clamp(10px, 2vw, 28px);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border: 2px solid var(--color-ink);
-  border-radius: 0.65rem;
-  background: var(--color-paper);
-  color: var(--color-ink);
-  font-weight: 800;
-  line-height: 1;
-  box-shadow: var(--shadow-brutal-sm);
-  transition:
-    transform 0.12s ease-out,
-    box-shadow 0.12s ease-out,
-    background-color 0.12s ease-out;
-  user-select: none;
-}
-
-.neo-btn:hover:not(:disabled) {
-  box-shadow: 5px 5px 0 0 var(--color-ink);
-}
-
-.neo-btn:active:not(:disabled) {
-  transform: translate(3px, 3px);
-  box-shadow: 0 0 0 0 var(--color-ink);
-}
-
-.neo-btn:disabled {
-  opacity: 0.45;
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
-.neo-btn-primary {
-  background: var(--color-lemon);
-}
-
-.neo-btn-start {
-  background: var(--color-mint);
-}
-
-.neo-btn-ghost {
+  gap: 0.55rem;
+  min-height: 46px;
+  padding: 0.7rem 1.05rem;
+  border: 1px solid var(--color-ink);
+  border-radius: 2px;
   background: transparent;
-  box-shadow: none;
-}
-
-.neo-btn-ghost:hover:not(:disabled) {
-  background: var(--color-cream-deep);
-  box-shadow: none;
-}
-
-.neo-btn-ghost:active:not(:disabled) {
-  transform: translate(1px, 1px);
-  box-shadow: none;
-}
-
-.neo-card {
-  border: 3px solid var(--color-ink);
-  border-radius: 0.9rem;
-  background: var(--color-paper);
-  box-shadow: var(--shadow-brutal);
-}
-
-.neo-panel {
-  border: 2px solid var(--color-ink);
-  border-radius: 0.65rem;
-  background: var(--color-paper);
-}
-
-.neo-label {
+  color: var(--color-ink);
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
+  line-height: 1;
   text-transform: uppercase;
+  text-decoration: none;
+  user-select: none;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease,
+    transform 0.12s ease,
+    border-color 0.16s ease;
 }
 
-.sticker {
+.btn:hover:not(:disabled) {
+  background: var(--color-paper-deep);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.btn-primary {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #293c49;
+}
+
+.btn-quiet {
+  border-color: transparent;
+  color: var(--color-ink-soft);
+}
+
+.btn-quiet:hover:not(:disabled) {
+  border-color: var(--color-paper-edge);
+  background: rgba(241, 229, 206, 0.5);
+  color: var(--color-ink);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-paper-edge);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-ink-soft);
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.icon-btn:hover {
+  border-color: var(--color-ink);
+  background: rgba(241, 229, 206, 0.6);
+  color: var(--color-ink);
+}
+
+.icon-btn[aria-pressed="true"] {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.key {
   display: inline-block;
-  border: 2px solid var(--color-ink);
-  box-shadow: var(--shadow-brutal-xs);
-  padding: 0.2rem 0.55rem;
+  min-width: 1.5em;
+  padding: 0.16rem 0.38rem;
+  border: 1px solid var(--color-paper-edge);
+  border-bottom-color: var(--color-ink-faint);
+  border-radius: 3px;
+  background: var(--color-paper);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  text-align: center;
   text-transform: uppercase;
-}
-
-.screen-grid {
-  background-color: var(--color-screen);
-  background-image:
-    linear-gradient(to right, rgba(243, 231, 204, 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(243, 231, 204, 0.055) 1px, transparent 1px);
-  background-size: 32px 32px;
+  color: var(--color-ink-soft);
 }

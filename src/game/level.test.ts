@@ -250,6 +250,16 @@ describe('generateRound', () => {
     }
   });
 
+  it('keeps generating valid pages past the notebook length', () => {
+    for (const page of [11, 14, 20, 33]) {
+      const plan = generateRound(page, 'ENDLESS');
+      const check = validateRound(plan);
+      expect(check.valid, `endless page ${page}`).toBe(true);
+      expect(plan.round).toBe(page);
+      expect(plan.targets.length).toBeGreaterThan(0);
+    }
+  });
+
   it('reports invalid plans instead of pretending they solve', () => {
     const plan = generateRound(1, 'CHECK');
     plan.solutionAngle += Math.PI / 2;

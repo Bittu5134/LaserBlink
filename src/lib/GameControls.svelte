@@ -180,12 +180,14 @@
   }
 
   .keys {
+    padding: 3px 9px;
+    border-radius: 2px;
+    background: rgba(24, 16, 10, 0.9);
     font-family: var(--font-mono);
     font-size: 0.8125rem;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: rgba(251, 243, 225, 0.62);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    color: #fbf3e1;
   }
 
   @media (max-width: 720px) {
