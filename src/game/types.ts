@@ -47,6 +47,7 @@ export interface RoundPlan {
   obstacles: Rect[];
   maxBounces: number;
   studySeconds: number;
+  solutionAngle?: number;
 }
 
 export interface RoundResult {
