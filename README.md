@@ -3,6 +3,7 @@
 # Laser · Blink
 
 ### **A memory game of paper targets and one reflecting laser line.**
+### [Play now at laserblink.bittu.dev](https://laserblink.bittu.dev)
 
 <img src="static/screenshot.png" width="850" alt="LaserBlink menu" />
 
