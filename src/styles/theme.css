@@ -1,10 +1,7 @@
 @theme {
-  --font-hand: "Playpen Sans", cursive;
   --font-mono: "Space Mono", monospace;
 
-  --color-desk: #1a130e;
-  --color-desk-deep: #0f0b08;
-  --color-paper: #fbf4e3;
+    --color-paper: #fbf4e3;
   --color-paper-deep: #f1e5ce;
   --color-paper-edge: #d9c9a8;
   --color-ink: #1b2832;
@@ -12,9 +9,6 @@
   --color-ink-faint: #77776f;
   --color-laser: #d9522b;
   --color-laser-deep: #a53b1e;
-  --color-laser-wash: #f0cdbc;
-  --color-blue: #35617f;
-  --color-blue-wash: #d9e4e9;
   --color-rule: rgba(27, 40, 50, 0.18);
 }
 
@@ -30,7 +24,6 @@
   --animate-page-in: page-in 0.45s cubic-bezier(0.22, 0.9, 0.28, 1) both;
   --animate-slip-in: slip-in 0.3s cubic-bezier(0.22, 0.9, 0.28, 1) both;
   --animate-pop-in: pop-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-beam-pulse: beam-pulse 2.4s ease-in-out infinite;
 }
 
 @keyframes page-in {
@@ -66,12 +59,3 @@
   }
 }
 
-@keyframes beam-pulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
-  }
-}

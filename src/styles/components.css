@@ -1,13 +1,7 @@
-.app {
-  position: relative;
-  min-height: 100dvh;
-  padding: clamp(8px, 1.2vw, 16px) clamp(10px, 2vw, 28px);
-}
-
 .label {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--color-ink-soft);
@@ -25,8 +19,8 @@
   background: transparent;
   color: var(--color-ink);
   font-family: var(--font-mono);
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.9375rem;
+  font-weight: 800;
   letter-spacing: 0.06em;
   line-height: 1;
   text-transform: uppercase;
@@ -81,7 +75,7 @@
   height: 44px;
   padding: 0;
   border: 1px solid var(--color-paper-edge);
-  border-radius: 50%;
+  border-radius: 2px;
   background: transparent;
   color: var(--color-ink-soft);
   transition:
@@ -96,22 +90,17 @@
   color: var(--color-ink);
 }
 
-.icon-btn[aria-pressed="true"] {
-  border-color: var(--color-ink);
-  color: var(--color-ink);
-}
-
 .key {
   display: inline-block;
   min-width: 1.5em;
   padding: 0.16rem 0.38rem;
   border: 1px solid var(--color-paper-edge);
   border-bottom-color: var(--color-ink-faint);
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--color-paper);
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.02em;
   line-height: 1.25;
   text-align: center;
