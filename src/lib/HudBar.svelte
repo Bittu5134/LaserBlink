@@ -169,14 +169,16 @@
   }
 
   .tools {
+    position: fixed;
+    top: clamp(10px, 2vh, 20px);
+    right: clamp(10px, 1.8vw, 22px);
     display: flex;
     align-items: center;
     gap: 4px;
-    margin-top: 2px;
     padding: 4px;
-    border: 1px solid rgba(247, 235, 208, 0.16);
-    border-radius: 999px;
-    background: rgba(28, 19, 11, 0.62);
+    border: 1px solid rgba(247, 235, 208, 0.2);
+    border-radius: 2px;
+    background: rgba(28, 19, 11, 0.74);
     pointer-events: auto;
   }
 
@@ -188,7 +190,7 @@
     height: 40px;
     padding: 0;
     border: 1px solid transparent;
-    border-radius: 50%;
+    border-radius: 2px;
     background: transparent;
     color: rgba(251, 243, 225, 0.78);
     transition:

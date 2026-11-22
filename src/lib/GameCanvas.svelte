@@ -95,20 +95,33 @@
     }
   }
 
+  let pressOrigin: { x: number; y: number } | null = null;
+
   function handlePointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if (scene.phase !== 'aim' || !onAim) return;
     event.preventDefault();
     canvas?.setPointerCapture(event.pointerId);
+    pressOrigin = { x: event.clientX, y: event.clientY };
+    if (scene.phase !== 'aim' || !onAim) return;
     const angle = pointerToAngle(event);
     if (angle !== null) onAim(angle);
   }
 
-  // Right-click is the commit button: it skips the study window, fires the
-  // shot, or turns the page.
+  // A click commits: skip the study window, fire, or turn the page. A drag
+  // only aims, so releasing after a drag never fires by accident.
+  function handlePointerUp(event: PointerEvent) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const origin = pressOrigin;
+    pressOrigin = null;
+    if (!origin) return;
+    const moved = Math.hypot(event.clientX - origin.x, event.clientY - origin.y);
+    if (moved > 6) return;
+    onAdvance?.();
+  }
+
+  // Right-click only suppresses the browser menu; the field owns its input.
   function handleContextMenu(event: MouseEvent) {
     event.preventDefault();
-    onAdvance?.();
   }
 </script>
 
@@ -118,6 +131,7 @@
   class:is-aiming={scene.phase === 'aim'}
   onpointermove={handlePointerMove}
   onpointerdown={handlePointerDown}
+  onpointerup={handlePointerUp}
   oncontextmenu={handleContextMenu}
   aria-label={aimHint}
 ></canvas>

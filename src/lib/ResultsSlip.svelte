@@ -21,7 +21,7 @@
     <dl class="result-stats">
       <div>
         <dt>Hits</dt>
-        <dd>{result.hits}/{result.requiredHits}</dd>
+        <dd>{result.hits}/{result.total}</dd>
       </div>
       <div>
         <dt>Score</dt>
