@@ -9,6 +9,9 @@
   let { onAdvance }: Props = $props();
 
   const canTrace = $derived(game.phase === 'aim' && game.ink > 0 && !game.previewActive);
+  const finished = $derived(
+    game.lives <= 0 || (game.mode === 'notebook' && game.round >= RUN_LENGTH),
+  );
   const actionLabel = $derived(
     game.phase === 'study'
       ? 'Aim'
@@ -16,7 +19,7 @@
         ? 'Fire'
         : game.phase === 'firing'
           ? 'Firing'
-          : game.round >= RUN_LENGTH || game.lives <= 0
+          : finished
             ? 'Finish'
             : 'Next page',
   );

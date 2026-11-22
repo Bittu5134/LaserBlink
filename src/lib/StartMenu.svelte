@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { game } from '../game/gameState.svelte';
+  import { game, DIFFICULTY_LABELS, type Mode } from '../game/gameState.svelte';
   import Icon from './Icon.svelte';
 
   interface Props {
@@ -11,10 +11,16 @@
   let { onStart, onHowToPlay, onFullscreen }: Props = $props();
 
   let seed = $state('');
+  let mode = $state<Mode>(game.mode);
+  let difficulty = $state(game.difficulty);
+
+  const difficultyLabel = $derived(DIFFICULTY_LABELS[difficulty - 1] ?? 'Normal');
 
   function submit(event: SubmitEvent) {
     event.preventDefault();
     const trimmed = seed.trim();
+    game.mode = mode;
+    game.difficulty = difficulty;
     onStart(trimmed ? trimmed : undefined);
   }
 </script>
@@ -23,6 +29,42 @@
   <h1>Laser<span>Blink</span></h1>
 
   <form class="menu-form" onsubmit={submit}>
+    <div class="mode-row" role="group" aria-label="Mode">
+      <button
+        class="mode-btn"
+        class:is-on={mode === 'notebook'}
+        type="button"
+        aria-pressed={mode === 'notebook'}
+        onclick={() => (mode = 'notebook')}
+      >
+        Notebook
+      </button>
+      <button
+        class="mode-btn"
+        class:is-on={mode === 'endless'}
+        type="button"
+        aria-pressed={mode === 'endless'}
+        onclick={() => (mode = 'endless')}
+      >
+        Endless
+      </button>
+    </div>
+
+    <div class="difficulty">
+      <label class="run-label" for="difficulty">Difficulty</label>
+      <input
+        id="difficulty"
+        class="slider"
+        type="range"
+        min="1"
+        max="5"
+        step="1"
+        bind:value={difficulty}
+        aria-valuetext={difficultyLabel}
+      />
+      <output class="difficulty-value" for="difficulty">{difficultyLabel}</output>
+    </div>
+
     <button class="play-btn" type="submit">
       Play
       <Icon name="play" size={26} />
@@ -147,6 +189,64 @@
   .play-btn:active {
     transform: rotate(-0.7deg) translate(3px, 3px);
     box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.42);
+  }
+
+  .mode-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid rgba(251, 244, 227, 0.38);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    min-width: 128px;
+    min-height: 48px;
+    padding: 0 18px;
+    border: 0;
+    background: transparent;
+    color: rgba(251, 244, 227, 0.74);
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  .mode-btn.is-on {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  .mode-btn:not(.is-on):hover {
+    background: rgba(251, 244, 227, 0.12);
+    color: var(--color-paper);
+  }
+
+  .difficulty {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .slider {
+    width: min(260px, 60vw);
+    accent-color: var(--color-laser);
+  }
+
+  .difficulty-value {
+    min-width: 5.5ch;
+    font-family: var(--font-mono);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--color-paper);
   }
 
   .run-row {

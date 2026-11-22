@@ -102,6 +102,7 @@
 
     if (event.code === 'Space') {
       event.preventDefault();
+      if (game.phase === 'menu') return;
       game.advance();
       return;
     }
@@ -158,7 +159,7 @@
 <main class="app" class:is-playing={game.phase !== 'menu'}>
   {#if game.phase === 'menu'}
     <StartMenu
-      onStart={(seed) => game.startGame(seed)}
+      onStart={(seed) => game.startGame({ seed })}
       onHowToPlay={() => (showHelp = true)}
       onFullscreen={toggleFullscreen}
     />

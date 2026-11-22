@@ -27,9 +27,9 @@
 </script>
 
 <aside class="rail rail-left">
-  <div class="chip page-chip" aria-label={`Page ${game.round} of ${RUN_LENGTH}`}>
+  <div class="chip page-chip" aria-label={`Page ${game.round}${game.mode === 'notebook' ? ` of ${RUN_LENGTH}` : ''}`}>
     <span class="page-now">{String(game.round).padStart(2, '0')}</span>
-    <span class="page-total">/{RUN_LENGTH}</span>
+    <span class="page-total">{game.mode === 'notebook' ? `/${RUN_LENGTH}` : 'endless'}</span>
   </div>
 
   <div class="chip lives-chip" aria-label={`${game.lives} of ${game.maxLives} mistakes left`}>
