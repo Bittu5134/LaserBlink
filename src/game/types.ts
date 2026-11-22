@@ -90,14 +90,3 @@ export interface Settings {
   sound: boolean;
 }
 
-export interface RunSummary {
-  seed: string;
-  score: number;
-  highScore: number;
-  round: number;
-  pagesCleared: number;
-  accuracy: number;
-  hits: number;
-  targets: number;
-  bestStars: number;
-}

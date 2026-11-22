@@ -31,7 +31,7 @@ const burntBallUrls = [
   ball6BurntUrl,
 ];
 
-export interface SpriteBundle {
+interface SpriteBundle {
   scratchpad: HTMLImageElement | null;
   cardboard: HTMLImageElement | null;
   balls: (HTMLImageElement | null)[];

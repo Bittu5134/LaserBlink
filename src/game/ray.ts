@@ -7,20 +7,6 @@ function cross(a: Vec2, b: Vec2): number {
   return a.x * b.y - a.y * b.x;
 }
 
-export function rayCircle(origin: Vec2, dir: Vec2, center: Vec2, radius: number): number | null {
-  const oc = sub(origin, center);
-  const b = dot(oc, dir);
-  const c = dot(oc, oc) - radius * radius;
-  const disc = b * b - c;
-  if (disc < 0) return null;
-  const root = Math.sqrt(disc);
-  const t1 = -b - root;
-  const t2 = -b + root;
-  if (t1 > EPS) return t1;
-  if (t2 > EPS) return t2;
-  return null;
-}
-
 // Ray cast from INSIDE the arena bouncing off its interior walls
 export function rayInsideArena(origin: Vec2, dir: Vec2, arena: Rect): { t: number; normal: Vec2 } | null {
   let tx = Infinity;

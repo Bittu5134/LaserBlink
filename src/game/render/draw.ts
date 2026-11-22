@@ -3,16 +3,16 @@
 import type { Mirror, Rect, RectPiece, Segment, Vec2 } from '../types';
 import { getSprites } from './sprites';
 
-export const CARD_BORDER = '#2c1e13';
+const CARD_BORDER = '#2c1e13';
 export const INK = '#181512';
-export const LASER_RED = '#ff3a1f';
-export const LASER_GLOW = '#ff8a4a';
-export const LASER_CORE = '#fff6ea';
-export const PAPER_YELLOW = '#f7ebba';
-export const PENCIL_RED = 'rgba(198, 74, 48, 0.78)';
-export const PENCIL_BLUE = 'rgba(58, 96, 160, 0.72)';
-export const RULED_LINE = 'rgba(74, 114, 172, 0.16)';
-export const MARGIN_LINE = 'rgba(178, 102, 82, 0.17)';
+const LASER_RED = '#ff3a1f';
+const LASER_GLOW = '#ff8a4a';
+const LASER_CORE = '#fff6ea';
+const PAPER_YELLOW = '#f7ebba';
+const PENCIL_RED = 'rgba(198, 74, 48, 0.78)';
+const PENCIL_BLUE = 'rgba(58, 96, 160, 0.72)';
+const RULED_LINE = 'rgba(74, 114, 172, 0.16)';
+const MARGIN_LINE = 'rgba(178, 102, 82, 0.17)';
 
 // The cardboard is the arena: one full-bleed surface, walls at the screen edge.
 export function drawArenaBackground(
@@ -430,15 +430,6 @@ export function drawTrace(
   ctx.restore();
 }
 
-// Kept for callers that ask for the basic aim guide.
-export function drawAimGuide(
-  ctx: CanvasRenderingContext2D,
-  segments: Segment[],
-  _bounces: number,
-  _maxBounces: number,
-): void {
-  drawTrace(ctx, segments, 'guide');
-}
 
 // Fired laser beam: red-orange outer glow, hot core and a flared head.
 export function drawLaserBeam(
@@ -734,7 +725,7 @@ function drawMirror(ctx: CanvasRenderingContext2D, mirror: Mirror): void {
 }
 
 // Dark felt absorber patch: no reflection, diagonal hatch edge, dotted texture.
-export function drawAbsorber(
+function drawAbsorber(
   ctx: CanvasRenderingContext2D,
   rect: Rect,
   reducedMotion = false,

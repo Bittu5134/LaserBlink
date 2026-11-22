@@ -2,22 +2,17 @@
   type IconName =
     | 'sound'
     | 'mute'
-    | 'music'
     | 'motion'
     | 'home'
     | 'fullscreen'
     | 'help'
     | 'close'
     | 'ink'
-    | 'left'
-    | 'right'
     | 'fire'
-    | 'menu'
     | 'copy'
     | 'check'
     | 'play'
     | 'next'
-    | 'seed'
     | 'star';
 
   interface Props {
@@ -48,10 +43,7 @@
   {:else if name === 'mute'}
     <path d="M4 9.5v5h3l4.5 3.5v-12L7 9.5H4Z" />
     <path d="m15.5 9.5 5 5m0-5-5 5" />
-  {:else if name === 'music'}
-    <path d="M9 17.5V6.5l9-2v11" />
-    <circle cx="6.7" cy="17.6" r="2.4" />
-    <circle cx="15.7" cy="15.6" r="2.4" />
+
   {:else if name === 'motion'}
     <path d="M9 6.5v11M15 6.5v11" />
   {:else if name === 'home'}
@@ -67,15 +59,11 @@
     <path d="m6 6 12 12M18 6 6 18" />
   {:else if name === 'ink'}
     <path d="M12 3.5c2.6 3.2 5.4 6.2 5.4 9.4a5.4 5.4 0 0 1-10.8 0c0-3.2 2.8-6.2 5.4-9.4Z" />
-  {:else if name === 'left'}
-    <path d="M19 12H5m6-6-6 6 6 6" />
-  {:else if name === 'right'}
-    <path d="M5 12h14m-6-6 6 6-6 6" />
+
+
   {:else if name === 'fire'}
     <path d="M13 3.5c.4 3-2 4.6-3.3 6.3-1 1.3-.7 2.5.5 3.2-.1-1.6.8-2.8 2.1-3.5-.2 2.7 2.2 3.3 2.2 5.9a4.5 4.5 0 0 1-9 0c0-2.2 1.2-4 2.6-5.7C10.3 7.2 12.6 5.6 13 3.5Z" />
-  {:else if name === 'menu'}
-    <path d="M5 4.5h11.5A2.5 2.5 0 0 1 19 7v12.5H7.5A2.5 2.5 0 0 1 5 17V4.5Z" />
-    <path d="M5 17a2.5 2.5 0 0 1 2.5-2.5H19M9 8h6" />
+
   {:else if name === 'copy'}
     <rect x="8" y="8" width="11" height="11" rx="1.5" />
     <path d="M16 8V4.5H5V16h3.5" />
@@ -85,8 +73,7 @@
     <path d="M8 5.5 19 12 8 18.5v-13Z" />
   {:else if name === 'next'}
     <path d="M4 12h15m-6-6 6 6-6 6" />
-  {:else if name === 'seed'}
-    <path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4" />
+
   {:else if name === 'star'}
     <path d="m12 3.6 2.6 5.4 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.8L12 3.6Z" fill="currentColor" stroke="none" />
   {/if}

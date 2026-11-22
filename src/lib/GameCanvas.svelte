@@ -19,7 +19,7 @@
   // always fills the window instead of letterboxing inside it.
   const SHORT_SIDE = 625;
 
-  let view = { scale: 1, dpr: 1, w: 0, h: 0 };
+  let view = { scale: 1, dpr: 1 };
 
   const aimHint = $derived(
     scene.phase === 'aim'
@@ -50,7 +50,7 @@
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      view = { scale, dpr, w: width, h: height };
+      view = { scale, dpr };
       setPlayfield(width / scale, height / scale);
       onResize?.();
     };

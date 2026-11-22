@@ -23,7 +23,7 @@ export function setPlayfield(w: number, h: number) {
 }
 export const TARGET_RADIUS = 32;
 
-export const PALETTE = [
+const PALETTE = [
   '#60a5fa', // 0: Sky Blue
   '#f87171', // 1: Coral Red
   '#c084fc', // 2: Lavender Purple
@@ -45,7 +45,7 @@ export function targetCount(round: number): number {
   return counts[Math.min(round, counts.length) - 1];
 }
 
-export function bounceCap(round: number): number {
+function bounceCap(round: number): number {
   return bounceCaps[Math.min(round, bounceCaps.length) - 1];
 }
 
