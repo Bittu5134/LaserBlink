@@ -1,11 +1,24 @@
-import type { Phase, RoundPlan, RoundResult, Segment, Settings } from './types';
-import { ARENA, generateRound } from './level';
+import type { Phase, RoundPlan, RoundResult, Segment, Settings, TargetResult } from './types';
+import { ARENA, createRunSeed, generateRound } from './level';
 import { traceBeam } from './beam';
-import { evaluateShot, scoreRound } from './scoring';
+import { evaluateShot, gradeRound, scoreRound } from './scoring';
 import { sounds } from './audio';
 import { fx } from './render/particles';
 import { distanceAlong } from './render/scene';
 import { totalPathLength } from './render/draw';
+
+export const RUN_LENGTH = 10;
+
+const MAX_INK = 3;
+const BEAM_TRAVEL_MS = 650;
+
+function prefersReducedMotion(): boolean {
+  try {
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
+}
 
 export class GameController {
   phase = $state<Phase>('menu');
@@ -29,115 +42,176 @@ export class GameController {
   totalBallsBurned = $state<number>(0);
   roundPerfect = $state<boolean>(false);
 
+  runSeed = $state<string>('');
+  ink = $state<number>(MAX_INK);
+  maxInk = MAX_INK;
+  previewSegments = $state<Segment[]>([]);
+  inkUsed = $state<number>(0);
+  previewActive = $state<boolean>(false);
+  roundPassed = $state<boolean>(false);
+  bestStars = $state<number>(0);
+  totalInkUsed = $state<number>(0);
+  newHighScore = $state<boolean>(false);
+
   settings = $state<Settings>({
     sound: true,
-    assist: 'stub',
+    reducedMotion: prefersReducedMotion(),
   });
 
   private timerInterval: number | null = null;
   private animFrame: number | null = null;
   private firingStartTime = 0;
+  private lastTickSecond = -1;
+  private pendingResult: RoundResult | null = null;
+  private runStartHighScore = 0;
 
   constructor() {
     this.loadHighScore();
+    sounds.enabled = this.settings.sound;
   }
 
   loadHighScore() {
-    if (typeof localStorage !== 'undefined') {
+    try {
+      if (typeof localStorage === 'undefined') return;
       const saved = localStorage.getItem('laserblink_highscore');
-      if (saved) {
-        this.highScore = parseInt(saved, 10) || 0;
+      if (!saved) return;
+      const value = Number(saved);
+      if (Number.isFinite(value) && value > 0) {
+        this.highScore = Math.floor(value);
       }
+    } catch {
+      // storage unavailable, keep default
     }
   }
 
   saveHighScore() {
-    if (this.score > this.highScore) {
-      this.highScore = this.score;
+    if (this.score <= this.highScore) return;
+    this.highScore = this.score;
+    try {
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('laserblink_highscore', String(this.highScore));
       }
+    } catch {
+      // storage unavailable, score still lives in memory
     }
   }
 
   toggleSound() {
     this.settings.sound = !this.settings.sound;
-    sounds.enabled = this.settings.sound;
+    sounds.setEnabled(this.settings.sound);
     if (this.settings.sound) sounds.playClick();
   }
 
-  toggleAssist() {
-    if (this.settings.assist === 'stub') {
-      this.settings.assist = 'full';
-    } else if (this.settings.assist === 'full') {
-      this.settings.assist = 'off';
-    } else {
-      this.settings.assist = 'stub';
-    }
+  toggleReducedMotion() {
+    this.settings.reducedMotion = !this.settings.reducedMotion;
     sounds.playClick();
-    this.recalculateBeam();
+
+    // If a shot is mid-flight, settle it right away instead of leaving it hanging.
+    if (this.settings.reducedMotion && this.phase === 'firing' && this.pendingResult) {
+      this.clearTimers();
+      const roundRes = this.pendingResult;
+      this.pendingResult = null;
+      this.finishFiring(roundRes);
+    }
   }
 
-  startGame() {
+  startGame(runSeed?: string) {
+    // First click of the run: unlock audio and start the notebook soundtrack.
     sounds.playClick();
+    sounds.startMusic();
+    this.clearTimers();
+    fx.reset();
+
+    this.runSeed = runSeed ?? createRunSeed();
+    this.runStartHighScore = this.highScore;
     this.round = 1;
     this.score = 0;
     this.lives = this.maxLives;
     this.totalHits = 0;
     this.totalTargets = 0;
     this.totalBallsBurned = 0;
+    this.roundPerfect = false;
+    this.bestStars = 0;
+    this.totalInkUsed = 0;
+    this.newHighScore = false;
+    this.results = null;
+    this.roundPassed = false;
+    this.pendingResult = null;
+
     this.startRound(1);
   }
 
   retryGame() {
+    this.startGame(this.runSeed || undefined);
+  }
+
+  newRun() {
     this.startGame();
+    this.goToMenu();
   }
 
   goToMenu() {
     sounds.playClick();
+    sounds.stopMusic();
+    sounds.setScene('menu');
     this.clearTimers();
+    this.pendingResult = null;
+    this.previewActive = false;
+    this.previewSegments = [];
+    this.beamProgress = 0;
     this.phase = 'menu';
   }
 
   startRound(roundNumber: number) {
     this.clearTimers();
     fx.reset();
-    this.round = roundNumber;
-    this.plan = generateRound(roundNumber);
+
+    this.round = Math.min(Math.max(1, roundNumber), RUN_LENGTH);
+    this.plan = generateRound(this.round, this.runSeed);
     this.angle = -Math.PI / 4;
     this.beamProgress = 0;
     this.burntTargetIds = new Set();
     this.results = null;
+    this.roundPassed = false;
+    this.pendingResult = null;
 
-    // Recalculate aiming path
+    this.ink = this.maxInk;
+    this.inkUsed = 0;
+    this.previewActive = false;
+    this.previewSegments = [];
+
     this.recalculateBeam();
 
-    // Start study / memorization phase
     this.phase = 'study';
     this.studyCountdown = this.plan.studySeconds;
+    this.lastTickSecond = Math.ceil(this.studyCountdown);
 
-    sounds.playBeep(false);
+    sounds.setScene('study');
+    sounds.playStudyTick(this.studyCountdown);
 
     const stepMs = 100;
     this.timerInterval = window.setInterval(() => {
       this.studyCountdown = Math.max(0, this.studyCountdown - stepMs / 1000);
 
-      // Audio beeps on last 3 seconds
-      if (this.studyCountdown > 0 && this.studyCountdown <= 2.1 && Math.round(this.studyCountdown * 10) % 10 === 0) {
-        sounds.playBeep(false);
+      const second = Math.ceil(this.studyCountdown);
+      if (this.studyCountdown > 0 && second !== this.lastTickSecond) {
+        this.lastTickSecond = second;
+        sounds.playStudyTick(this.studyCountdown);
       }
 
       if (this.studyCountdown <= 0) {
-        this.clearTimers();
         this.enterAimPhase();
       }
     }, stepMs);
   }
 
   enterAimPhase() {
-    // BLINK! Paper balls disappear into hiding
+    if (this.phase !== 'study') return;
+    this.clearCountdown();
     sounds.playBlink();
+    sounds.setScene('aim');
     this.phase = 'aim';
+    this.studyCountdown = 0;
     this.recalculateBeam();
   }
 
@@ -153,74 +227,102 @@ export class GameController {
     this.recalculateBeam();
   }
 
-  recalculateBeam() {
-    if (!this.plan) return;
-    const { segments } = traceBeam(
-      this.plan.player,
-      this.angle,
-      ARENA,
-      this.plan.obstacles,
-      this.plan.maxBounces,
-    );
-    this.segments = segments;
+  useInk() {
+    if (this.phase !== 'aim' || !this.plan || this.ink <= 0) return;
+
+    this.ink -= 1;
+    this.inkUsed += 1;
+    this.totalInkUsed += 1;
+    this.previewActive = true;
+    this.previewSegments = this.trace(this.angle, this.plan.maxBounces);
+    sounds.playInk();
   }
 
-  // Fire laser!
+  // Default aim guide is only the first leg of the beam. Targets are never drawn from it.
+  recalculateBeam() {
+    if (!this.plan) return;
+    this.segments = this.trace(this.angle, 0);
+    if (this.previewActive) {
+      this.previewSegments = this.trace(this.angle, this.plan.maxBounces);
+    }
+  }
+
+  private trace(angle: number, maxBounces: number): Segment[] {
+    if (!this.plan) return [];
+    const absorbers = this.plan.pieces.filter((p) => p.kind === 'absorber').map((p) => p.rect);
+    const { segments } = traceBeam(
+      this.plan.player,
+      angle,
+      ARENA,
+      this.plan.obstacles,
+      maxBounces,
+      this.plan.mirrors,
+      absorbers,
+    );
+    return segments;
+  }
+
   fireLaser() {
     if (this.phase !== 'aim' || !this.plan) return;
 
+    this.clearCountdown();
     this.phase = 'firing';
     this.beamProgress = 0;
     this.burntTargetIds = new Set();
     this.firingStartTime = performance.now();
+    this.previewActive = false;
 
     sounds.playLaser();
 
-    // Evaluate target hit candidates
-    const evaluated = evaluateShot(this.plan.targets, this.segments);
-    const roundRes = scoreRound(evaluated, this.round, this.segments);
+    const shotSegments = this.trace(this.angle, this.plan.maxBounces);
+    this.segments = shotSegments;
+
+    const evaluated = evaluateShot(this.plan.targets, shotSegments);
+    const roundRes = this.buildResult(evaluated, shotSegments);
     this.results = roundRes;
+    this.pendingResult = roundRes;
 
-    const DURATION = 650; // beam travel duration in ms
-    const totalLen = totalPathLength(this.segments);
+    if (this.settings.reducedMotion) {
+      this.markHitsBurned(evaluated);
+      this.finishFiring(roundRes);
+      return;
+    }
 
+    const totalLen = totalPathLength(shotSegments);
     let lastBounceIndex = -1;
 
     const animateBeam = (now: number) => {
       const elapsed = now - this.firingStartTime;
-      const progress = Math.min(1, elapsed / DURATION);
+      const progress = Math.min(1, elapsed / BEAM_TRAVEL_MS);
       this.beamProgress = progress;
 
-      // Check wall bounce points for bounce sound and sparks
       const currentDistance = progress * totalLen;
       let accum = 0;
-      for (let i = 0; i < this.segments.length - 1; i++) {
+      for (let i = 0; i < shotSegments.length - 1; i++) {
         const segLen = Math.hypot(
-          this.segments[i].b.x - this.segments[i].a.x,
-          this.segments[i].b.y - this.segments[i].a.y,
+          shotSegments[i].b.x - shotSegments[i].a.x,
+          shotSegments[i].b.y - shotSegments[i].a.y,
         );
         accum += segLen;
         if (currentDistance >= accum && i > lastBounceIndex) {
           lastBounceIndex = i;
           sounds.playBounce(i);
           const norm = {
-            x: Math.sign(this.segments[i].a.x - this.segments[i].b.x),
-            y: Math.sign(this.segments[i].a.y - this.segments[i].b.y),
+            x: Math.sign(shotSegments[i].a.x - shotSegments[i].b.x),
+            y: Math.sign(shotSegments[i].a.y - shotSegments[i].b.y),
           };
-          fx.spawnBounceSparks(this.segments[i].b.x, this.segments[i].b.y, norm);
+          fx.spawnBounceSparks(shotSegments[i].b.x, shotSegments[i].b.y, norm);
         }
       }
 
-      // Check for paper ball burns as the laser cuts through
       for (const res of evaluated) {
         if (!res.hit || this.burntTargetIds.has(res.target.id)) continue;
 
-        const ballDistOnPath = distanceAlong(res.closest, this.segments);
+        const ballDistOnPath = distanceAlong(res.closest, shotSegments);
         if (currentDistance >= ballDistOnPath) {
           this.burntTargetIds.add(res.target.id);
           this.burntTargetIds = new Set(this.burntTargetIds);
 
-          // Paper burning sizzle and fire burst!
           sounds.playBurn();
           fx.spawnBurnExplosion(res.target.pos.x, res.target.pos.y, res.target.color);
 
@@ -233,6 +335,7 @@ export class GameController {
       if (progress < 1) {
         this.animFrame = requestAnimationFrame(animateBeam);
       } else {
+        this.animFrame = null;
         this.finishFiring(roundRes);
       }
     };
@@ -240,11 +343,40 @@ export class GameController {
     this.animFrame = requestAnimationFrame(animateBeam);
   }
 
+  private buildResult(evaluated: TargetResult[], shotSegments: Segment[]): RoundResult {
+    const base = scoreRound(evaluated, this.round, shotSegments, this.inkUsed);
+
+    // The generated page owns the quota; fall back to scoring's if it is missing.
+    const requiredHits = this.plan?.requiredHits ?? base.requiredHits;
+    if (requiredHits === base.requiredHits) return base;
+
+    const grade = gradeRound(base.hits, base.total, requiredHits);
+    return {
+      ...base,
+      requiredHits,
+      passed: base.hits >= requiredHits,
+      grade: grade.title,
+      stars: grade.stars,
+    };
+  }
+
+  private markHitsBurned(evaluated: TargetResult[]) {
+    for (const res of evaluated) {
+      if (res.hit) this.burntTargetIds.add(res.target.id);
+    }
+    this.burntTargetIds = new Set(this.burntTargetIds);
+  }
+
   finishFiring(roundRes: RoundResult) {
+    if (this.phase !== 'firing') return;
+
+    this.clearTimers();
+    this.pendingResult = null;
     this.phase = 'reveal';
     this.beamProgress = 1;
+    this.markHitsBurned(roundRes.results);
+    sounds.setScene('reveal');
 
-    // Apply score
     this.score += roundRes.score;
     this.saveHighScore();
 
@@ -252,42 +384,59 @@ export class GameController {
     this.totalTargets += roundRes.total;
     this.totalBallsBurned += roundRes.hits;
     this.roundPerfect = roundRes.perfect;
+    this.roundPassed = roundRes.passed;
+    this.bestStars = Math.max(this.bestStars, roundRes.stars);
 
-    if (roundRes.perfect) {
-      sounds.playClear();
-      if (this.plan) {
-        fx.addText(this.plan.player.x, this.plan.player.y - 50, '★ PERFECT ASH! +2500 ★', '#facc15');
+    if (roundRes.passed) {
+      sounds.playPass();
+      if (this.plan && roundRes.perfect) {
+        fx.addText(this.plan.player.x, this.plan.player.y - 50, '★ PERFECT ASH! ★', '#facc15');
       }
-    }
-
-    // Check if player passed the round or lost a life
-    // Requirement to pass: hit at least 1 target or >= 50%
-    const minHitsRequired = Math.max(1, Math.floor(roundRes.total * 0.4));
-    if (roundRes.hits < minHitsRequired) {
+    } else {
       this.lives = Math.max(0, this.lives - 1);
-      if (this.lives <= 0) {
-        window.setTimeout(() => {
-          sounds.playGameOver();
-          this.phase = 'gameover';
-        }, 1500);
-      }
+      sounds.playMiss();
     }
   }
 
   nextRound() {
+    if (this.phase !== 'reveal') return;
     sounds.playClick();
-    if (this.lives > 0) {
-      this.startRound(this.round + 1);
+
+    if (this.lives <= 0) {
+      this.endRun('gameover');
+      return;
+    }
+    if (this.round >= RUN_LENGTH) {
+      this.endRun('victory');
+      return;
+    }
+    this.startRound(this.round + 1);
+  }
+
+  private endRun(phase: 'gameover' | 'victory') {
+    this.clearTimers();
+    const beatHighScore = this.score > this.runStartHighScore;
+    this.saveHighScore();
+    this.newHighScore = beatHighScore;
+    this.phase = phase;
+    sounds.setScene(phase);
+
+    if (phase === 'victory') {
+      sounds.playVictory();
     } else {
-      this.phase = 'gameover';
+      sounds.playGameOver();
     }
   }
 
-  clearTimers() {
+  private clearCountdown() {
     if (this.timerInterval !== null) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
+  }
+
+  clearTimers() {
+    this.clearCountdown();
     if (this.animFrame !== null) {
       cancelAnimationFrame(this.animFrame);
       this.animFrame = null;
