@@ -1,21 +1,17 @@
 import type { Phase, RoundPlan, Segment, TargetResult, Vec2 } from '../types';
-import { ARENA } from '../level';
+import { ARENA, CANVAS } from '../level';
 import { closestOnSegment } from '../vec';
 import {
-  BEAM,
-  CREAM,
+  drawScratchpadBackground,
+  drawPaperBall,
+  drawLaserTurret,
+  drawAimGuide,
+  drawLaserBeam,
+  drawObstacles,
+  totalPathLength,
   INK,
-  LEMON,
-  PAPER,
-  RAISE,
-  SCREEN,
-  drawBall,
-  drawBeam,
-  drawGrid,
-  drawRing,
-  drawSparks,
-  totalLength,
 } from './draw';
+import { fx } from './particles';
 
 export interface SceneState {
   phase: Phase;
@@ -24,145 +20,150 @@ export interface SceneState {
   segments: Segment[];
   results: TargetResult[] | null;
   beamProgress: number;
-  assist: 'off' | 'stub';
+  studyCountdown: number;
+  assist: 'off' | 'stub' | 'full';
+  burntTargetIds: Set<number>;
 }
 
 export function drawScene(ctx: CanvasRenderingContext2D, s: SceneState): void {
-  drawGrid(ctx, 1000, 625);
+  // 1. Draw scratchpad notebook page on cardboard mat
+  drawScratchpadBackground(ctx, CANVAS.w, CANVAS.h, ARENA);
+
   const plan = s.plan;
   if (!plan) return;
 
-  drawWalls(ctx);
-
-  for (const rect of plan.obstacles) {
-    ctx.fillStyle = RAISE;
-    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-    ctx.strokeStyle = CREAM;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(rect.x + 2, rect.y + 2, rect.w - 4, rect.h - 4);
+  // 2. Draw obstacles (rulers / cardboard blocks)
+  if (plan.obstacles.length > 0) {
+    drawObstacles(ctx, plan.obstacles);
   }
 
+  // 3. Draw Scorch Marks & Particles on the paper
+  fx.draw(ctx);
+
+  // 4. Study phase: Paper balls are scattered and visible!
   if (s.phase === 'study') {
-    for (const t of plan.targets) drawBall(ctx, t.pos, t.radius, t.color, String(t.id));
-  }
-
-  if (s.phase === 'firing' || s.phase === 'reveal') {
-    drawBeam(ctx, s.segments, s.phase === 'reveal' ? 1 : s.beamProgress);
-    if (s.phase === 'reveal') {
-      drawBounceMarks(ctx, s.segments, plan);
+    for (const t of plan.targets) {
+      drawPaperBall(ctx, t.pos, t.radius, t.spriteIndex, false, String(t.id));
     }
   }
 
-  if (s.phase === 'firing' && s.results) {
-    drawLiveTargets(ctx, s);
+  // 5. Aim phase: Paper balls are HIDDEN ("hiddent ehn you have to point a lazer that reflects aff fo the edges")
+  // Only subtle faint pencil sketch or eraser dusting on the scratchpad paper
+  if (s.phase === 'aim') {
+    // Optional faint pencil watermark circles if full assist is on, otherwise completely hidden
+    if (s.assist === 'full') {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(74, 114, 172, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 6]);
+      for (const t of plan.targets) {
+        ctx.beginPath();
+        ctx.arc(t.pos.x, t.pos.y, t.radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // Aim guide with reflecting bounces
+    if (s.assist !== 'off') {
+      drawAimGuide(ctx, s.segments, s.segments.length - 1, plan.maxBounces);
+    }
   }
 
-  if (s.phase === 'aim') drawAim(ctx, plan.player, s.angle, s.assist, plan.maxBounces);
+  // 6. Firing phase: Laser beam surges forward, paper balls reappeared and get burnt!
+  if (s.phase === 'firing') {
+    // Paper balls reappear back! ("once place you put back the image and it burns the paper and gives you score")
+    const reachedLength = s.beamProgress * totalPathLength(s.segments);
 
-  drawPlayer(ctx, plan.player, s.angle, s.phase === 'aim');
+    for (const t of plan.targets) {
+      const isBurnt = s.burntTargetIds.has(t.id);
+      drawPaperBall(
+        ctx,
+        t.pos,
+        t.radius,
+        t.spriteIndex,
+        isBurnt,
+        String(t.id),
+        isBurnt ? 1 : 0,
+      );
+    }
 
-  if (s.phase === 'reveal' && s.results) drawReveal(ctx, s.results);
-}
-
-function drawWalls(ctx: CanvasRenderingContext2D): void {
-  ctx.fillStyle = RAISE;
-  ctx.fillRect(0, 0, 1000, ARENA.y);
-  ctx.fillRect(0, ARENA.y + ARENA.h, 1000, 625 - ARENA.y - ARENA.h);
-  ctx.fillRect(0, 0, ARENA.x, 625);
-  ctx.fillRect(ARENA.x + ARENA.w, 0, 1000 - ARENA.x - ARENA.w, 625);
-
-  ctx.strokeStyle = CREAM;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(ARENA.x, ARENA.y, ARENA.w, ARENA.h);
-
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(ARENA.x - 4, ARENA.y - 4, ARENA.w + 8, ARENA.h + 8);
-
-  ctx.strokeStyle = 'rgba(253, 224, 71, 0.75)';
-  ctx.lineWidth = 2;
-  const c = 16;
-  ctx.beginPath();
-  for (const [x, y, dx, dy] of [
-    [ARENA.x, ARENA.y, 1, 1],
-    [ARENA.x + ARENA.w, ARENA.y, -1, 1],
-    [ARENA.x, ARENA.y + ARENA.h, 1, -1],
-    [ARENA.x + ARENA.w, ARENA.y + ARENA.h, -1, -1],
-  ]) {
-    ctx.moveTo(x + dx * 4, y + dy * c);
-    ctx.lineTo(x + dx * 4, y + dy * 4);
-    ctx.lineTo(x + dx * c, y + dy * 4);
+    // Laser beam firing animation
+    drawLaserBeam(ctx, s.segments, s.beamProgress);
   }
-  ctx.stroke();
+
+  // 7. Reveal phase: Laser beam remains lit, burnt paper balls show charred scorch marks
+  if (s.phase === 'reveal') {
+    drawLaserBeam(ctx, s.segments, 1);
+
+    for (const t of plan.targets) {
+      const isBurnt = s.burntTargetIds.has(t.id);
+      drawPaperBall(ctx, t.pos, t.radius, t.spriteIndex, isBurnt, String(t.id));
+    }
+
+    // Draw accuracy badges and connection indicators
+    if (s.results) {
+      drawAccuracyDetails(ctx, s.results);
+    }
+  }
+
+  // 8. Player turret
+  drawLaserTurret(
+    ctx,
+    plan.player,
+    s.angle,
+    s.phase === 'aim',
+    s.phase === 'firing',
+  );
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, pos: Vec2, angle: number, armed: boolean): void {
-  ctx.save();
-  ctx.translate(pos.x, pos.y);
-  ctx.rotate(angle);
+function drawAccuracyDetails(ctx: CanvasRenderingContext2D, results: TargetResult[]): void {
+  for (const r of results) {
+    const p = r.target.pos;
 
-  ctx.beginPath();
-  ctx.moveTo(34, 0);
-  ctx.lineTo(18, -9);
-  ctx.lineTo(18, 9);
-  ctx.closePath();
-  ctx.fillStyle = BEAM;
-  ctx.fill();
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 2.5;
-  ctx.stroke();
-  ctx.restore();
+    // Accuracy badge
+    const badgeText = r.hit ? `${Math.round(r.accuracy * 100)}% BURN` : 'MISSED';
+    const badgeColor = r.accuracy >= 0.95 ? '#16a34a' : r.hit ? '#ca8a04' : '#dc2626';
 
-  ctx.beginPath();
-  ctx.arc(pos.x, pos.y, 21, 0, Math.PI * 2);
-  ctx.fillStyle = armed ? PAPER : '#e8dcc4';
-  ctx.fill();
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 3;
-  ctx.stroke();
-}
+    ctx.save();
+    ctx.translate(p.x, p.y + r.target.radius + 16);
 
-function drawAim(
-  ctx: CanvasRenderingContext2D,
-  pos: Vec2,
-  angle: number,
-  assist: 'off' | 'stub',
-  bounces: number,
-): void {
-  const dx = Math.cos(angle);
-  const dy = Math.sin(angle);
-
-  if (assist === 'stub') {
+    // Badge bubble
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.setLineDash([5, 7]);
-    ctx.moveTo(pos.x + dx * 34, pos.y + dy * 34);
-    ctx.lineTo(pos.x + dx * 86, pos.y + dy * 86);
-    ctx.strokeStyle = BEAM;
-    ctx.lineWidth = 3;
+    ctx.roundRect(-42, -10, 84, 20, 6);
+    ctx.fill();
     ctx.stroke();
-    ctx.setLineDash([]);
-  }
 
-  ctx.fillStyle = 'rgba(243, 231, 204, 0.55)';
-  ctx.font = '700 13px "Space Mono", monospace';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(`BOUNCES ${bounces}`, pos.x + 28, pos.y + 28);
-}
+    // Badge text
+    ctx.fillStyle = badgeColor;
+    ctx.font = '800 11px "Space Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badgeText, 0, 1);
 
-function drawBounceMarks(ctx: CanvasRenderingContext2D, segments: Segment[], plan: RoundPlan): void {
-  const points: Vec2[] = segments.slice(0, -1).map((s) => s.b);
-  if (points.length > 0) drawSparks(ctx, points.slice(0, plan.maxBounces));
-}
+    ctx.restore();
 
-function drawLiveTargets(ctx: CanvasRenderingContext2D, s: SceneState): void {
-  if (!s.results) return;
-  const reached = s.beamProgress * totalLength(s.segments);
+    // If missed, draw dotted line to closest laser beam segment
+    if (!r.hit) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([3, 5]);
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(r.closest.x, r.closest.y);
+      ctx.strokeStyle = 'rgba(220, 38, 38, 0.7)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
 
-  for (const result of s.results) {
-    if (!result.hit) continue;
-    if (distanceAlong(result.closest, s.segments) > reached) continue;
-    drawBall(ctx, result.target.pos, result.target.radius, result.target.color, String(result.target.id));
+      // Nearest point dot
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(r.closest.x, r.closest.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
   }
 }
 
@@ -170,61 +171,10 @@ export function distanceAlong(point: Vec2, segments: Segment[]): number {
   let run = 0;
   for (const seg of segments) {
     const nearest = closestOnSegment(point, seg.a, seg.b);
-    if (nearest.distance < 1) return run + Math.hypot(nearest.point.x - seg.a.x, nearest.point.y - seg.a.y);
+    if (nearest.distance < 1) {
+      return run + Math.hypot(nearest.point.x - seg.a.x, nearest.point.y - seg.a.y);
+    }
     run += Math.hypot(seg.b.x - seg.a.x, seg.b.y - seg.a.y);
   }
   return run;
 }
-
-function drawReveal(ctx: CanvasRenderingContext2D, results: TargetResult[]): void {
-  for (const r of results) {
-    const p = r.target.pos;
-    ctx.globalAlpha = 0.55;
-    drawRing(ctx, p, r.target.radius * 3, 'rgba(243, 231, 204, 0.35)', [3, 6]);
-    drawRing(ctx, p, r.target.radius * 2, 'rgba(243, 231, 204, 0.55)', [3, 6]);
-    ctx.globalAlpha = 1;
-
-    if (!r.hit) {
-      ctx.beginPath();
-      ctx.setLineDash([3, 5]);
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(r.closest.x, r.closest.y);
-      ctx.strokeStyle = 'rgba(255, 177, 153, 0.75)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.beginPath();
-      ctx.arc(r.closest.x, r.closest.y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = BEAM;
-      ctx.fill();
-    }
-
-    if (r.hit) {
-      drawBall(ctx, p, r.target.radius, r.target.color, String(r.target.id));
-    } else {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r.target.radius, 0, Math.PI * 2);
-      ctx.fillStyle = SCREEN;
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(243, 231, 204, 0.8)';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(243, 231, 204, 0.8)';
-      ctx.font = '700 14px "Space Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(r.target.id), p.x, p.y);
-    }
-
-    const label = `${Math.round(r.accuracy * 100)}%`;
-    ctx.font = '700 15px "Space Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillStyle = r.accuracy >= 0.999 ? LEMON : r.hit ? MINT : CREAM;
-    ctx.fillText(label, p.x, p.y + r.target.radius + 12);
-  }
-}
-
-const MINT = '#86efac';
