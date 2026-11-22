@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { game } from '../game/gameState.svelte';
   import Icon from './Icon.svelte';
 
   interface Props {
@@ -35,36 +34,12 @@
       </button>
     </header>
 
-    <ol class="help-steps">
-      <li>
-        <span class="step-num">01</span>
-        <div>
-          <h3>Study</h3>
-          <p>Targets show for a few seconds.</p>
-        </div>
-      </li>
-      <li>
-        <span class="step-num">02</span>
-        <div>
-          <h3>Draw</h3>
-          <p>Drag or use the arrows. Shift makes fine steps.</p>
-        </div>
-      </li>
-      <li>
-        <span class="step-num">03</span>
-        <div>
-          <h3>Ink</h3>
-          <p>Trace shows the full line. Three per page.</p>
-        </div>
-      </li>
-      <li>
-        <span class="step-num">04</span>
-        <div>
-          <h3>Fire</h3>
-          <p>One shot. Hit the quota to pass. A miss costs one mistake.</p>
-        </div>
-      </li>
-    </ol>
+    <ul class="help-steps">
+      <li><strong>Study</strong> the targets before they blink away.</li>
+      <li><strong>Drag</strong> to aim. Shift is a fine step.</li>
+      <li><strong>Trace</strong> spends one ink for the full line. Three a page.</li>
+      <li><strong>Fire</strong> once. Hit the quota or lose a mistake.</li>
+    </ul>
 
     <div class="controls-block">
       <p class="label">Keys</p>
@@ -78,30 +53,6 @@
         <div><dt><span class="key">F</span></dt><dd>Fullscreen</dd></div>
         <div><dt><span class="key">Esc</span></dt><dd>Close help</dd></div>
       </dl>
-    </div>
-
-    <div class="settings-block">
-      <p class="label">Settings</p>
-      <div class="setting-row">
-        <button
-          class="btn btn-quiet"
-          type="button"
-          onclick={() => game.toggleSound()}
-          aria-pressed={game.settings.sound}
-        >
-          <Icon name={game.settings.sound ? 'sound' : 'mute'} size={16} />
-          Sound: {game.settings.sound ? 'on' : 'off'}
-        </button>
-        <button
-          class="btn btn-quiet"
-          type="button"
-          onclick={() => game.toggleReducedMotion()}
-          aria-pressed={game.settings.reducedMotion}
-        >
-          <Icon name="motion" size={16} />
-          Reduced motion: {game.settings.reducedMotion ? 'on' : 'off'}
-        </button>
-      </div>
     </div>
 
     <button class="btn btn-primary close-btn" type="button" onclick={onClose}>
@@ -160,44 +111,26 @@
   .help-steps {
     display: grid;
     gap: 0;
-    margin: 6px 0 0;
+    margin: 8px 0 0;
     padding: 0;
     list-style: none;
   }
 
   .help-steps li {
-    display: grid;
-    grid-template-columns: 2rem 1fr;
-    gap: 10px;
-    padding: 9px 0;
+    padding: 10px 0;
     border-bottom: 1px dashed var(--color-rule);
-  }
-
-  .step-num {
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--color-laser-deep);
-    padding-top: 2px;
-  }
-
-  .help-steps h3 {
-    font-family: var(--font-display);
     font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.25;
-  }
-
-  .help-steps p {
-    margin-top: 1px;
-    font-size: 0.875rem;
     line-height: 1.45;
     color: var(--color-ink-soft);
   }
 
-  .controls-block,
-  .settings-block {
-    margin-top: 14px;
+  .help-steps strong {
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+
+  .controls-block {
+    margin-top: 16px;
   }
 
   .control-list {
@@ -222,18 +155,6 @@
     font-size: 0.875rem;
     line-height: 1.4;
     color: var(--color-ink-soft);
-  }
-
-  .setting-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
-  }
-
-  .setting-row .btn {
-    min-height: 40px;
-    font-size: 0.875rem;
   }
 
   .close-btn {
