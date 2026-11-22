@@ -25,8 +25,8 @@
     scene.phase === 'aim'
       ? 'Targets hidden. Drag to aim. Right-click or Space fires.'
       : scene.phase === 'study'
-        ? 'Study the field. Right-click or Space starts aiming.'
-        : 'Laser field. Results are marked on the field.',
+        ? 'Study the targets. Right-click or Space starts aiming.'
+        : 'Results are marked on the field.',
   );
 
   onMount(() => {
@@ -119,7 +119,7 @@
   onpointermove={handlePointerMove}
   onpointerdown={handlePointerDown}
   oncontextmenu={handleContextMenu}
-  aria-label="Laser field. {aimHint}"
+  aria-label={aimHint}
 ></canvas>
 
 <style>

@@ -58,14 +58,24 @@ export function drawArenaBackground(
 
 // The laser bounces here, so the edge has to read as a wall.
 export function drawArenaEdge(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const band = 9;
   ctx.save();
-  ctx.strokeStyle = 'rgba(38, 24, 14, 0.72)';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(1.5, 1.5, w - 3, h - 3);
 
-  ctx.strokeStyle = 'rgba(246, 232, 204, 0.14)';
+  // Dark rim, then a lit inner lip where the beam turns around.
+  ctx.fillStyle = 'rgba(34, 22, 13, 0.55)';
+  ctx.fillRect(0, 0, w, band);
+  ctx.fillRect(0, h - band, w, band);
+  ctx.fillRect(0, 0, band, h);
+  ctx.fillRect(w - band, 0, band, h);
+
+  ctx.strokeStyle = 'rgba(28, 18, 10, 0.85)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(1, 1, w - 2, h - 2);
+
+  ctx.strokeStyle = 'rgba(246, 232, 204, 0.22)';
   ctx.lineWidth = 1;
-  ctx.strokeRect(5.5, 5.5, w - 11, h - 11);
+  ctx.strokeRect(band - 0.5, band - 0.5, w - band * 2 + 1, h - band * 2 + 1);
+
   ctx.restore();
 }
 

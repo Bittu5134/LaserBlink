@@ -4,7 +4,7 @@ import { evaluateShot, requiredHitsFor } from './scoring';
 import { angleOf, normalize, sub } from './vec';
 
 export const CANVAS = { w: 1000, h: 625 };
-export const ARENA: Rect = { x: 2, y: 2, w: 996, h: 621 };
+export const ARENA: Rect = { x: 9, y: 9, w: 982, h: 607 };
 
 // The canvas fills the viewport, so the logical field follows the window shape.
 // Geometry is only read while a page is generated, so mutating these in place
@@ -12,12 +12,14 @@ export const ARENA: Rect = { x: 2, y: 2, w: 996, h: 621 };
 export function setPlayfield(w: number, h: number) {
   const width = Math.max(480, Math.round(w));
   const height = Math.max(480, Math.round(h));
+  // A wall band inside the screen, so a bounce is something you can see.
+  const wall = 9;
   CANVAS.w = width;
   CANVAS.h = height;
-  ARENA.x = 2;
-  ARENA.y = 2;
-  ARENA.w = width - 4;
-  ARENA.h = height - 4;
+  ARENA.x = wall;
+  ARENA.y = wall;
+  ARENA.w = width - wall * 2;
+  ARENA.h = height - wall * 2;
 }
 export const TARGET_RADIUS = 32;
 
