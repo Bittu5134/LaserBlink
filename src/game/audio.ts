@@ -107,14 +107,6 @@ class SoundEngine {
     this.setEnabled(value);
   }
 
-  public get musicEnabled(): boolean {
-    return this._musicEnabled;
-  }
-
-  public set musicEnabled(value: boolean) {
-    this.setMusicEnabled(value);
-  }
-
   setEnabled(value: boolean) {
     if (this._enabled === value) return;
     this._enabled = value;
@@ -126,17 +118,6 @@ class SoundEngine {
       this.startMusic();
     }
     this.applyMasterLevel();
-  }
-
-  setMusicEnabled(value: boolean) {
-    if (this._musicEnabled === value) return;
-    this._musicEnabled = value;
-
-    if (!value) {
-      this.stopMusic();
-    } else if (this._enabled && this.scene !== 'menu') {
-      this.startMusic();
-    }
   }
 
   setScene(scene: Scene) {
@@ -203,11 +184,7 @@ class SoundEngine {
     this.tone(ctx, 'triangle', 760, 540, t, 0.045, 0.045, 'fx');
   }
 
-  playBeep(isHigh = false) {
-    const ctx = this.begin();
-    if (!ctx) return;
-    this.pencilTap(ctx, ctx.currentTime, isHigh ? 1046.5 : 783.99, 0.075);
-  }
+
 
   playStudyTick(remainingSeconds: number) {
     const ctx = this.begin();
@@ -312,15 +289,7 @@ class SoundEngine {
     this.pluck(ctx, hz(72 + note), t, 0.1, 0.32, 'fx');
   }
 
-  playClear() {
-    const ctx = this.begin();
-    if (!ctx) return;
-    const t = ctx.currentTime;
 
-    [72, 76, 79, 84].forEach((midi, i) => {
-      this.pluck(ctx, hz(midi), t + i * 0.075, 0.1, 0.42, 'fx');
-    });
-  }
 
   playGameOver() {
     const ctx = this.begin();
@@ -373,14 +342,7 @@ class SoundEngine {
     this.pluck(ctx, hz(60), t, 0.07, 0.9, 'fx');
   }
 
-  playAbsorber() {
-    const ctx = this.begin();
-    if (!ctx) return;
-    const t = ctx.currentTime;
 
-    this.tone(ctx, 'sine', 92, 40, t, 0.26, 0.13, 'fx', 180);
-    this.noiseHit(ctx, t, 0.12, 420, 0.7, 0.05, 'fx', 220);
-  }
 
   private begin(): AudioContext | null {
     if (!this._enabled) return null;
