@@ -435,7 +435,7 @@ export class GameController {
         fx.addText(this.plan.player.x, this.plan.player.y - 50, '★ PERFECT ASH! ★', '#facc15');
       }
     } else {
-      this.lives = Math.max(0, this.lives - 1);
+      if (this.mode === 'notebook') this.lives = Math.max(0, this.lives - 1);
       sounds.playMiss();
     }
   }
@@ -444,7 +444,7 @@ export class GameController {
     if (this.phase !== 'reveal') return;
     sounds.playClick();
 
-    if (this.lives <= 0) {
+    if (this.mode === 'notebook' && this.lives <= 0) {
       this.endRun('gameover');
       return;
     }
@@ -453,6 +453,12 @@ export class GameController {
       return;
     }
     this.startRound(this.round + 1);
+  }
+
+  // Endless has no failure state, so the player ends the run themselves.
+  endRunNow() {
+    if (this.phase === 'menu' || this.phase === 'gameover' || this.phase === 'victory') return;
+    this.endRun('gameover');
   }
 
   private endRun(phase: 'gameover' | 'victory') {

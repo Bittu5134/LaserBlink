@@ -203,9 +203,13 @@
   {#if showExit}
     <ExitModal
       onResume={() => (showExit = false)}
-      onRestart={() => {
+      onReplay={() => {
         showExit = false;
         game.retryGame();
+      }}
+      onEndRun={() => {
+        showExit = false;
+        game.endRunNow();
       }}
       onHome={() => {
         showExit = false;

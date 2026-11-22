@@ -15,7 +15,7 @@
 
   const won = $derived(game.phase === 'victory');
   const title = $derived(
-    won ? 'Run complete' : game.mode === 'endless' ? 'Run over' : 'Out of mistakes',
+    won ? 'Run complete' : game.mode === 'endless' ? 'Run ended' : 'Out of mistakes',
   );
   const modeLine = $derived(
     `${game.mode === 'endless' ? 'Endless' : 'Classic'} · level ${game.round} · difficulty ${game.difficulty}/5`,

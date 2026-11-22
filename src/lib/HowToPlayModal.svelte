@@ -37,7 +37,7 @@
     <ul class="help-steps">
       <li><strong>Study</strong> the targets before they blink away.</li>
       <li><strong>Drag</strong> to aim. Shift is a fine step.</li>
-      <li><strong>Trace</strong> spends one ink for the full line. Three a run.</li>
+      <li><strong>Assist</strong> shows the full reflected line. Three for a whole run.</li>
       <li><strong>Fire</strong> once. Hit the quota or lose a mistake.</li>
     </ul>
 
@@ -46,7 +46,7 @@
       <dl class="control-list">
         <div><dt><span class="key">Space</span></dt><dd>Start, fire, next</dd></div>
         <div><dt><span class="key">&larr;</span> <span class="key">&rarr;</span> / <span class="key">A</span> <span class="key">D</span></dt><dd>Aim, Shift fine</dd></div>
-        <div><dt><span class="key">I</span></dt><dd>Trace ink</dd></div>
+        <div><dt><span class="key">I</span></dt><dd>Assist</dd></div>
         <div><dt>Right-click</dt><dd>Fire</dd></div>
         <div><dt><span class="key">M</span></dt><dd>Sound</dd></div>
         <div><dt><span class="key">V</span></dt><dd>Reduced motion</dd></div>

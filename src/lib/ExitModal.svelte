@@ -1,13 +1,16 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
 
+  import { game } from '../game/gameState.svelte';
+
   interface Props {
     onResume: () => void;
-    onRestart: () => void;
+    onReplay: () => void;
+    onEndRun: () => void;
     onHome: () => void;
   }
 
-  let { onResume, onRestart, onHome }: Props = $props();
+  let { onResume, onReplay, onEndRun, onHome }: Props = $props();
 </script>
 
 <div class="veil" role="presentation">
@@ -19,8 +22,12 @@
         <Icon name="play" size={17} />
         Keep playing
       </button>
-      <button class="btn" type="button" onclick={onRestart}>Restart run</button>
-      <button class="btn btn-quiet" type="button" onclick={onHome}>Home</button>
+      <button class="btn" type="button" onclick={onReplay}>Replay game</button>
+      {#if game.mode === 'endless'}
+        <button class="btn" type="button" onclick={onEndRun}>End run</button>
+      {:else}
+        <button class="btn btn-quiet" type="button" onclick={onHome}>Home</button>
+      {/if}
     </div>
 
     <p class="hint"><span class="key">Esc</span> closes this</p>

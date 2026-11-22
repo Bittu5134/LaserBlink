@@ -12,35 +12,29 @@
 
   const targetCount = $derived(game.plan?.targets.length ?? 0);
   const requiredHits = $derived(game.plan?.requiredHits ?? 0);
+  const canTrace = $derived(game.phase === 'aim' && game.ink > 0 && !game.previewActive);
 
   const announcement = $derived(
     game.phase === 'study'
-      ? `Study phase. ${targetCount} targets.`
+      ? `Study. ${targetCount} targets.`
       : game.phase === 'aim'
-        ? `Aim phase. Burn ${requiredHits} of ${targetCount} to pass.`
+        ? `Aim. Burn ${requiredHits} of ${targetCount} to pass.`
         : game.phase === 'firing'
-          ? 'Laser firing.'
-          : `Reveal. ${game.results?.hits ?? 0} of ${game.results?.total ?? targetCount} burned. ${
-              game.roundPassed ? 'Passed.' : 'Failed, one mistake used.'
+          ? 'Firing.'
+          : `${game.results?.hits ?? 0} of ${game.results?.total ?? targetCount} burned. ${
+              game.roundPassed ? 'Passed.' : 'Failed.'
             }`,
   );
 </script>
 
-<aside class="rail rail-left">
-  <div class="chip page-chip" aria-label={`Level ${game.round}${game.mode === 'notebook' ? ` of ${RUN_LENGTH}` : ''}`}>
-    <span class="page-now">{String(game.round).padStart(2, '0')}</span>
-    <span class="page-total">{game.mode === 'notebook' ? `/${RUN_LENGTH}` : 'endless'}</span>
+<aside class="rail rail-left" aria-label="Level">
+  <div class="chip wide" aria-label={`Level ${game.round}${game.mode === 'notebook' ? ` of ${RUN_LENGTH}` : ''}`}>
+    <span class="num">{String(game.round).padStart(2, '0')}</span>
+    <span class="unit">{game.mode === 'notebook' ? `/${RUN_LENGTH}` : '∞'}</span>
   </div>
 
-  <div class="chip lives-chip" aria-label={`${game.lives} of ${game.maxLives} mistakes left`}>
-    {#each Array(game.maxLives) as _, index}
-      <span class="ball" class:is-lost={index >= game.lives}></span>
-    {/each}
-  </div>
-
-  <div class="chip score-chip">
-    <span class="chip-label">Score</span>
-    <strong>{game.score.toLocaleString()}</strong>
+  <div class="chip wide" aria-label={`Score ${game.score}`}>
+    <span class="value">{game.score.toLocaleString()}</span>
   </div>
 
   <nav class="tools" aria-label="Game controls">
@@ -80,102 +74,103 @@
   <p class="sr-only" aria-live="polite">{announcement}</p>
 </aside>
 
+<aside class="rail rail-left-bottom" aria-label="Mistakes and assist">
+  {#if game.mode === 'notebook'}
+    <div class="chip wide lives" aria-label={`${game.lives} of ${game.maxLives} mistakes left`}>
+      {#each Array(game.maxLives) as _, index}
+        <span class="ball" class:is-lost={index >= game.lives}></span>
+      {/each}
+    </div>
+  {/if}
+
+  <div class="chip wide assist">
+    <span class="pips" aria-label={`${game.ink} of ${game.maxInk} assists left`}>
+      {#each Array(game.maxInk) as _, index}
+        <span class="pip" class:is-empty={index >= game.ink}></span>
+      {/each}
+    </span>
+    <button
+      class="assist-btn"
+      type="button"
+      onclick={() => game.useInk()}
+      disabled={!canTrace}
+      title={canTrace ? 'Trace the full line, one assist (I)' : 'No assists left'}
+    >
+      Assist
+    </button>
+  </div>
+</aside>
+
 <style>
-  .rail-left {
+  .rail {
     position: fixed;
     z-index: 10;
-    top: clamp(10px, 2vh, 20px);
-    left: clamp(10px, 1.8vw, 22px);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    align-items: stretch;
+    gap: 6px;
     pointer-events: none;
   }
 
+  .rail-left {
+    top: clamp(10px, 2vh, 20px);
+    left: clamp(10px, 1.8vw, 22px);
+    width: 156px;
+  }
+
+  .rail-left-bottom {
+    bottom: clamp(10px, 2vh, 20px);
+    left: clamp(10px, 1.8vw, 22px);
+    width: 156px;
+  }
+
+  /* Every HUD mark shares one height so the column reads as a stack. */
   .chip {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 7px 12px;
+    height: 44px;
+    padding: 0 12px;
     border: 1px solid rgba(247, 235, 208, 0.2);
     border-radius: 2px;
     background: rgba(28, 19, 11, 0.74);
     color: #fbf3e1;
-    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.8);
   }
 
-  .page-chip {
-    align-items: baseline;
-    gap: 3px;
+  .wide {
+    width: 100%;
   }
 
-  .page-now {
+  .num {
     font-family: var(--font-mono);
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
   }
 
-  .page-total {
+  .unit {
     font-family: var(--font-mono);
-    font-size: 0.95rem;
+    font-size: 0.9375rem;
     font-weight: 800;
-    opacity: 0.74;
+    opacity: 0.76;
   }
 
-  .lives-chip {
-    gap: 7px;
-    padding: 10px 12px;
-  }
-
-  .ball {
-    width: 14px;
-    height: 14px;
-    border-radius: 48% 52% 46% 54% / 52% 46% 54% 48%;
-    background: radial-gradient(circle at 34% 28%, #fffaf0, #ddcbaa 58%, #a08a64 100%);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  }
-
-  .ball.is-lost {
-    background: transparent;
-    border: 1.5px solid rgba(247, 235, 208, 0.34);
-    box-shadow: none;
-  }
-
-  .score-chip {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
-    padding: 6px 12px 7px;
-  }
-
-  .chip-label {
+  .value {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    opacity: 0.72;
-  }
-
-  .score-chip strong {
-    font-family: var(--font-mono);
-    font-size: 1.5rem;
-    font-weight: 800;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    line-height: 1;
+    letter-spacing: -0.02em;
   }
 
   .tools {
-    position: fixed;
-    top: clamp(10px, 2vh, 20px);
-    right: clamp(10px, 1.8vw, 22px);
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 4px;
+    justify-content: space-between;
+    height: 44px;
+    padding: 2px;
     border: 1px solid rgba(247, 235, 208, 0.2);
     border-radius: 2px;
     background: rgba(28, 19, 11, 0.74);
@@ -186,8 +181,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     padding: 0;
     border: 1px solid transparent;
     border-radius: 2px;
@@ -205,22 +200,91 @@
     color: #fbf3e1;
   }
 
+  .lives {
+    gap: 7px;
+  }
+
+  .ball {
+    width: 14px;
+    height: 14px;
+    border-radius: 48% 52% 46% 54% / 52% 46% 54% 48%;
+    background: radial-gradient(circle at 34% 28%, #fffaf0, #ddcbaa 58%, #a08a64 100%);
+  }
+
+  .ball.is-lost {
+    background: transparent;
+    border: 1.5px solid rgba(247, 235, 208, 0.34);
+  }
+
+  .assist {
+    gap: 10px;
+    padding: 0 8px 0 12px;
+  }
+
+  .pips {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pip {
+    width: 8px;
+    height: 12px;
+    border-radius: 50% 50% 46% 54% / 62% 62% 38% 38%;
+    background: #9dc3da;
+  }
+
+  .pip.is-empty {
+    background: transparent;
+    border: 1.5px solid rgba(247, 235, 208, 0.4);
+  }
+
+  .assist-btn {
+    flex: 1;
+    height: 30px;
+    border: 1px solid rgba(247, 235, 208, 0.34);
+    border-radius: 2px;
+    background: transparent;
+    color: #fbf3e1;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    pointer-events: auto;
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .assist-btn:hover:not(:disabled) {
+    border-color: #fbf3e1;
+    background: rgba(251, 243, 225, 0.12);
+  }
+
+  .assist-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
   @media (max-width: 720px) {
-    .rail-left {
-      gap: 6px;
+    .rail-left,
+    .rail-left-bottom {
+      width: 124px;
     }
 
-    .page-now {
-      font-size: 1.5rem;
-    }
-
-    .score-chip strong {
+    .num {
       font-size: 1.25rem;
     }
 
+    .value {
+      font-size: 1.05rem;
+    }
+
     .tool {
-      width: 40px;
-      height: 40px;
+      width: 34px;
+      height: 34px;
     }
   }
 </style>

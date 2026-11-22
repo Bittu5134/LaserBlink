@@ -8,10 +8,10 @@
 
   let { onAdvance }: Props = $props();
 
-  const canTrace = $derived(game.phase === 'aim' && game.ink > 0 && !game.previewActive);
   const finished = $derived(
-    game.lives <= 0 || (game.mode === 'notebook' && game.round >= RUN_LENGTH),
+    game.mode === 'notebook' && (game.lives <= 0 || game.round >= RUN_LENGTH),
   );
+
   const actionLabel = $derived(
     game.phase === 'study'
       ? 'Aim'
@@ -26,23 +26,7 @@
 </script>
 
 <aside class="rail rail-right">
-  <div class="ink" aria-label={`${game.ink} of ${game.maxInk} ink left`}>
-    <span class="pips" aria-hidden="true">
-      {#each Array(game.maxInk) as _, index}
-        <span class="pip" class:is-empty={index >= game.ink}></span>
-      {/each}
-    </span>
-    <button
-      class="trace"
-      type="button"
-      onclick={() => game.useInk()}
-      disabled={!canTrace}
-      title={canTrace ? 'Trace the full reflected line (I)' : 'No ink to spend'}
-    >
-      <Icon name="ink" size={16} />
-      Trace
-    </button>
-  </div>
+  <p class="keys" aria-hidden="true">Left click / Space</p>
 
   <button class="action" type="button" onclick={onAdvance} disabled={game.phase === 'firing'}>
     {#if game.phase === 'aim'}
@@ -56,8 +40,6 @@
     {/if}
     {actionLabel}
   </button>
-
-  <p class="keys" aria-hidden="true">Right-click / Space</p>
 </aside>
 
 <style>
@@ -65,88 +47,41 @@
     position: fixed;
     z-index: 11;
     right: clamp(10px, 1.8vw, 22px);
-    bottom: clamp(12px, 2.4vh, 22px);
+    bottom: clamp(10px, 2vh, 20px);
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
+    align-items: stretch;
+    gap: 6px;
+    width: 148px;
   }
 
-  .ink {
+  .keys {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 5px 7px 5px 11px;
+    justify-content: center;
+    height: 34px;
     border: 1px solid rgba(247, 235, 208, 0.2);
     border-radius: 2px;
     background: rgba(28, 19, 11, 0.74);
-  }
-
-  .pips {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .pip {
-    width: 8px;
-    height: 12px;
-    border-radius: 50% 50% 46% 54% / 62% 62% 38% 38%;
-    background: #9dc3da;
-    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.25);
-  }
-
-  .pip.is-empty {
-    background: transparent;
-    border: 1.5px solid rgba(247, 235, 208, 0.4);
-    box-shadow: none;
-  }
-
-  .trace {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-height: 34px;
-    padding: 0 10px;
-    border: 1px solid rgba(247, 235, 208, 0.34);
-    border-radius: 2px;
-    background: transparent;
-    color: #fbf3e1;
     font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    transition:
-      border-color 0.15s ease,
-      background-color 0.15s ease,
-      opacity 0.15s ease;
-  }
-
-  .trace:hover:not(:disabled) {
-    border-color: #fbf3e1;
-    background: rgba(251, 243, 225, 0.12);
-  }
-
-  .trace:disabled {
-    cursor: not-allowed;
-    opacity: 0.4;
+    letter-spacing: 0.04em;
+    color: #fbf3e1;
   }
 
   .action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    min-width: 196px;
-    min-height: 68px;
-    padding: 0 26px;
+    gap: 8px;
+    height: 60px;
     border: 2px solid #1b2832;
-    border-radius: 3px;
+    border-radius: 2px;
     background: #fbf4e3;
     color: #1b2832;
     font-family: var(--font-display);
-    font-size: 1.5rem;
+    font-size: 1.375rem;
     font-weight: 800;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -161,14 +96,14 @@
 
   .action:hover:not(:disabled) {
     background: #fffdf6;
-    transform: translate(-1px, -2px);
+    transform: translateY(-1px);
     box-shadow:
       0 18px 30px -14px rgba(12, 8, 5, 0.74),
       0 4px 9px rgba(12, 8, 5, 0.34);
   }
 
   .action:active:not(:disabled) {
-    transform: translate(3px, 3px);
+    transform: translateY(2px);
     box-shadow:
       0 4px 10px -6px rgba(12, 8, 5, 0.62),
       0 1px 2px rgba(12, 8, 5, 0.3);
@@ -179,37 +114,20 @@
     opacity: 0.72;
   }
 
-  .keys {
-    padding: 3px 9px;
-    border-radius: 2px;
-    background: rgba(24, 16, 10, 0.9);
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    color: #fbf3e1;
-  }
-
   @media (max-width: 720px) {
     .rail-right {
       left: 10px;
       right: 10px;
-      align-items: stretch;
-    }
-
-    .ink {
-      justify-content: flex-end;
-      align-self: flex-end;
-    }
-
-    .action {
-      width: 100%;
-      min-height: 64px;
-      font-size: 1.4rem;
+      width: auto;
     }
 
     .keys {
       display: none;
+    }
+
+    .action {
+      height: 60px;
+      font-size: 1.25rem;
     }
   }
 </style>

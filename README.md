@@ -14,21 +14,22 @@
 - The targets blink away. You get one shot and must remember where they were.
 - Aim the laser; it reflects off the screen edges, rulers, and mirror strips.
 - Burn the quota to pass. A failed level costs one of your three mistakes.
-- Ink lets you trace the whole reflected path. Three for the entire run, so spend it carefully.
+- Assist draws the whole reflected path. Three for the entire run, so spend it carefully.
 - A level you did not fully burn shows the expected path in blue pencil after the shot.
 
 ## Controls
 
 - Drag anywhere on the field to aim.
-- Click, tap, or press `Space` to fire and to move on.
+- Left click, tap, or press `Space` to fire and to move on.
+- `Esc` opens the exit sheet: keep playing, replay the game, or go home.
 - `Left` / `Right` or `A` / `D` to turn the turret, hold `Shift` for fine steps.
-- `I` to spend ink and trace the line.
+- `I` to spend an assist and see the full line.
 - `M` sound, `V` reduced motion, `F` fullscreen, `?` help, `Esc` closes help.
 
 ## Game Modes
 
 - **Classic**: ten levels, three mistakes. Finish level ten to complete the run.
-- **Endless**: levels keep coming at the top of the difficulty curve until the mistakes run out.
+- **Endless**: levels keep coming at the top of the difficulty curve. No mistake budget, you stop when you want.
 
 A game code replays the same levels. It is generated per run and shown on the end screen.
 

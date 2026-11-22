@@ -141,7 +141,7 @@ There are two sizes that matter in play: the page numeral at 1.75rem and the act
 
 The canvas fills the viewport. Its logical field is derived from the window shape so the walls sit at the screen edge at any aspect ratio, with a 9px dark wall band so a bounce is visible.
 
-HUD marks hold the screen edges: page, mistakes and score stack at the top left; ink and the single action button sit bottom right; the settings cluster sits under the stats. Nothing overlaps the middle of the field, where the puzzle lives.
+HUD marks hold the screen edges in one column of equal-height marks: level and score top left, the settings cluster under them, mistakes and assist bottom left, and the action button with its key hint bottom right. Nothing overlaps the middle of the field, where the puzzle lives.
 
 On narrow screens the left stack stays top left, the action button spans the bottom edge in the thumb zone, and the control hint is dropped.
 
@@ -163,7 +163,7 @@ Rails: translucent dark chips with cream numerals. They never sit in the field o
 
 Action button: a cream card with the phase verb as the label (Aim, Fire, Next page, Finish). One button at a time, always in the same place, always the largest control on screen.
 
-Ink control: three ink pips plus a Trace button that spends one. Disabled when the trace is already out or the page has no ink left.
+Assist control: three ink pips plus an Assist button that spends one, sitting under the mistake balls in the same left column. Disabled when the line is already traced or the run has no ink left.
 
 Help sheet: a cream modal, four rules and a key list. No settings duplicated inside it, no step numbers.
 
