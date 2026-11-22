@@ -141,12 +141,47 @@ function mirrorEndpoints(mirror: Mirror): [Vec2, Vec2] {
   ];
 }
 
+function segmentProjection(p: Vec2, seg: Segment): { t: number; dist: number } {
+  const ab = sub(seg.b, seg.a);
+  const len2 = ab.x * ab.x + ab.y * ab.y;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - seg.a.x) * ab.x + (p.y - seg.a.y) * ab.y) / len2));
+  return { t, dist: Math.hypot(p.x - (seg.a.x + ab.x * t), p.y - (seg.a.y + ab.y * t)) };
+}
+
 function distanceToMirror(p: Vec2, mirror: Mirror): number {
   const [a, b] = mirrorEndpoints(mirror);
-  const ab = sub(b, a);
-  const len2 = ab.x * ab.x + ab.y * ab.y;
-  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * ab.x + (p.y - a.y) * ab.y) / len2));
-  return Math.hypot(p.x - (a.x + ab.x * t), p.y - (a.y + ab.y * t));
+  return segmentProjection(p, { a, b }).dist;
+}
+
+// How far along the route a point sits, measured from the player.
+function distanceAlongPath(segments: Segment[], p: Vec2): number {
+  let travelled = 0;
+  let best = 0;
+  let bestDist = Infinity;
+
+  for (const seg of segments) {
+    const len = dist(seg.a, seg.b);
+    const projection = segmentProjection(p, seg);
+    if (projection.dist < bestDist) {
+      bestDist = projection.dist;
+      best = travelled + projection.t * len;
+    }
+    travelled += len;
+  }
+  return best;
+}
+
+function rectCenter(rect: Rect): Vec2 {
+  return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+}
+
+function rectsOverlap(a: Rect, b: Rect, margin = 0): boolean {
+  return (
+    a.x < b.x + b.w + margin &&
+    a.x + a.w + margin > b.x &&
+    a.y < b.y + b.h + margin &&
+    a.y + a.h + margin > b.y
+  );
 }
 
 function placePlayer(rng: () => number): Vec2 {
@@ -160,13 +195,23 @@ function placePlayer(rng: () => number): Vec2 {
   return { x: ARENA.x + 130, y: ARENA.y + ARENA.h - 130 };
 }
 
-function blockOnPath(segments: Segment[], player: Vec2, rng: () => number): Rect | null {
-  for (let i = 0; i < segments.length; i++) {
-    const seg = segments[i];
+function blockOnPath(segments: Segment[], player: Vec2, placed: Rect[], rng: () => number): Rect | null {
+  const floor =
+    placed.length === 0 ? 0 : Math.max(...placed.map((rect) => distanceAlongPath(segments, rectCenter(rect)))) + 90;
+  let travelled = 0;
+
+  for (const seg of segments) {
     const len = dist(seg.a, seg.b);
-    if (len < 230) continue;
+    if (len < 230) {
+      travelled += len;
+      continue;
+    }
 
     const t = 0.45 + rng() * 0.2;
+    const along = travelled + t * len;
+    travelled += len;
+    if (along < floor) continue;
+
     const point = { x: seg.a.x + (seg.b.x - seg.a.x) * t, y: seg.a.y + (seg.b.y - seg.a.y) * t };
     if (dist(point, player) < 170) continue;
 
@@ -175,21 +220,41 @@ function blockOnPath(segments: Segment[], player: Vec2, rng: () => number): Rect
     const h = vertical ? 90 + rng() * 55 : 34 + rng() * 12;
     const rect = { x: point.x - w / 2, y: point.y - h / 2, w, h };
     if (!rectInsideArena(rect, 8)) continue;
+    if (placed.some((other) => rectsOverlap(rect, other, 24))) continue;
     return rect;
   }
   return null;
 }
 
-function mirrorOnPath(segments: Segment[], player: Vec2, rng: () => number): Mirror | null {
-  const usable = segments.filter((seg) => dist(seg.a, seg.b) > 210);
-  if (usable.length === 0) return null;
+function mirrorOnPath(
+  segments: Segment[],
+  player: Vec2,
+  obstacles: Rect[],
+  placed: Mirror[],
+  rng: () => number,
+): Mirror | null {
+  // A second panel has to sit further along the route than the first, so it
+  // cannot cut the beam off before the earlier reflection happens.
+  const floor =
+    placed.length === 0 ? 0 : Math.max(...placed.map((mirror) => distanceAlongPath(segments, mirror.center))) + 70;
+  let travelled = 0;
 
-  for (const seg of usable) {
+  for (const seg of segments) {
     const len = dist(seg.a, seg.b);
+    if (len < 240) {
+      travelled += len;
+      continue;
+    }
+
     const t = 0.4 + rng() * 0.2;
+    const along = travelled + t * len;
+    travelled += len;
+    if (along < floor) continue;
+
     // Point away from both ends and the player.
     const point = { x: seg.a.x + (seg.b.x - seg.a.x) * t, y: seg.a.y + (seg.b.y - seg.a.y) * t };
     if (dist(point, player) < 190) continue;
+    if (placed.some((other) => dist(point, other.center) < 175)) continue;
 
     const incoming = normalize(sub(seg.b, seg.a));
     const turn = (0.7 + rng() * 1.1) * (rng() < 0.5 ? -1 : 1);
@@ -207,19 +272,28 @@ function mirrorOnPath(segments: Segment[], player: Vec2, rng: () => number): Mir
       [a, b] = mirrorEndpoints(mirror);
     }
 
-    if (halfLength >= 18 && pointInArena(a, 8) && pointInArena(b, 8) && len > 240) {
-      return mirror;
-    }
+    if (halfLength < 18 || !pointInArena(a, 8) || !pointInArena(b, 8)) continue;
+    // Keep the panel clear of blocks so it never hides inside one.
+    if (obstacles.some((rect) => pointInRect(mirror.center, rect, Math.max(70, halfLength + 16)))) continue;
+    return mirror;
   }
   return null;
 }
 
-function absorberOnPath(segments: Segment[], player: Vec2, count: number, rng: () => number): Rect | null {
+function absorberOnPath(
+  segments: Segment[],
+  player: Vec2,
+  count: number,
+  minDistance: number,
+  obstacles: Rect[],
+  mirrors: Mirror[],
+  rng: () => number,
+): Rect | null {
   const total = pathLength(segments);
-  const minBefore = count * 85 + 180;
-  if (total < minBefore + 70) return null;
+  const floor = Math.max(count * 85 + 180, minDistance);
+  if (total < floor + 70) return null;
 
-  const distance = Math.min(total - 55, Math.max(minBefore, total * 0.82));
+  const distance = Math.min(total - 55, Math.max(floor, total * 0.82));
   const point = pointAtDistance(segments, distance);
   if (!point || !pointInArena(point, 55) || dist(point, player) < 220) return null;
 
@@ -227,6 +301,8 @@ function absorberOnPath(segments: Segment[], player: Vec2, count: number, rng: (
   const h = 24 + rng() * 8;
   const rect = { x: point.x - w / 2, y: point.y - h / 2, w, h };
   if (!rectInsideArena(rect, 12)) return null;
+  if (obstacles.some((block) => rectsOverlap(rect, block, 20))) return null;
+  if (mirrors.some((mirror) => distanceToMirror(point, mirror) < 90)) return null;
   return rect;
 }
 
@@ -285,7 +361,31 @@ function toleranceFor(player: Vec2, targets: Target[]): number {
   return Math.max(MIN_TOLERANCE, Math.min(0.06, raw));
 }
 
-function generateCandidate(round: number, rng: () => number, seed: string): RoundPlan | null {
+// Most pages carry one panel; late rounds lean on two. Round four previews one.
+function rollMirrorCount(round: number, rng: () => number): number {
+  if (round < 4) return 0;
+  if (round === 4) return rng() < 0.2 ? 1 : 0;
+
+  const [zero, one] = round < 8 ? [0.18, 0.62] : [0.05, 0.5];
+  const roll = rng();
+  if (roll < zero) return 0;
+  if (roll < zero + one) return 1;
+  return 2;
+}
+
+function rollObstacleCount(round: number, rng: () => number): number {
+  if (round < 3) return 0;
+  if (round < 8) return 1;
+  return rng() < 0.35 ? 2 : 1;
+}
+
+function generateCandidate(
+  round: number,
+  rng: () => number,
+  seed: string,
+  mirrorCount: number,
+  obstacleCount: number,
+): RoundPlan | null {
   const count = targetCount(round);
   const maxBounces = bounceCap(round);
   const player = placePlayer(rng);
@@ -295,16 +395,17 @@ function generateCandidate(round: number, rng: () => number, seed: string): Roun
   if (pathLength(empty.segments) < 520) return null;
 
   const obstacles: Rect[] = [];
-  if (round >= 3) {
-    const block = blockOnPath(empty.segments, player, rng);
+  for (let i = 0; i < obstacleCount; i++) {
+    const trace = traceBeam(player, angle, ARENA, obstacles, maxBounces);
+    const block = blockOnPath(trace.segments, player, obstacles, rng);
     if (!block) return null;
     obstacles.push(block);
   }
 
   const mirrors: Mirror[] = [];
-  if (round >= 5) {
-    const beforeMirror = traceBeam(player, angle, ARENA, obstacles, maxBounces);
-    const mirror = mirrorOnPath(beforeMirror.segments, player, rng);
+  for (let i = 0; i < mirrorCount; i++) {
+    const trace = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors);
+    const mirror = mirrorOnPath(trace.segments, player, obstacles, mirrors, rng);
     if (!mirror) return null;
     mirrors.push(mirror);
   }
@@ -312,7 +413,20 @@ function generateCandidate(round: number, rng: () => number, seed: string): Roun
   const absorbers: Rect[] = [];
   if (round >= 7) {
     const beforeAbsorber = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors);
-    const absorber = absorberOnPath(beforeAbsorber.segments, player, count, rng);
+    const lastPiece = Math.max(
+      0,
+      ...obstacles.map((rect) => distanceAlongPath(beforeAbsorber.segments, rectCenter(rect))),
+      ...mirrors.map((mirror) => distanceAlongPath(beforeAbsorber.segments, mirror.center)),
+    );
+    const absorber = absorberOnPath(
+      beforeAbsorber.segments,
+      player,
+      count,
+      lastPiece + 80,
+      obstacles,
+      mirrors,
+      rng,
+    );
     if (!absorber) return null;
     absorbers.push(absorber);
   }
@@ -348,26 +462,32 @@ function generateCandidate(round: number, rng: () => number, seed: string): Roun
 
 // A plain horizontal route with pieces parked away from it. Used only if every
 // seeded attempt fails, so a run can never wedge on a generated page.
-function fallbackPlan(round: number, seed: string): RoundPlan {
+function fallbackPlan(round: number, seed: string, mirrorCount: number, obstacleCount: number): RoundPlan {
   const count = targetCount(round);
   const maxBounces = bounceCap(round);
   const player = { x: ARENA.x + 100, y: ARENA.y + ARENA.h * 0.52 };
   const angle = 0;
 
   const obstacles: Rect[] = [];
-  if (round >= 3) obstacles.push({ x: ARENA.x + ARENA.w * 0.52, y: ARENA.y + 26, w: 46, h: 128 });
+  if (obstacleCount >= 1) obstacles.push({ x: ARENA.x + ARENA.w * 0.52, y: ARENA.y + 26, w: 46, h: 128 });
+  if (obstacleCount >= 2) obstacles.push({ x: ARENA.x + ARENA.w * 0.3, y: ARENA.y + ARENA.h - 96, w: 120, h: 46 });
 
   const mirrors: Mirror[] = [];
-  if (round >= 5) {
+  if (mirrorCount >= 1) {
     mirrors.push({
       center: { x: ARENA.x + ARENA.w * 0.72, y: ARENA.y + ARENA.h - 28 },
       halfLength: 40,
       angle: 0.5,
     });
   }
+  if (mirrorCount >= 2) {
+    mirrors.push({ center: { x: ARENA.x + ARENA.w * 0.25, y: ARENA.y + 90 }, halfLength: 36, angle: 1.1 });
+  }
 
   const absorbers: Rect[] = [];
-  if (round >= 7) absorbers.push({ x: ARENA.x + ARENA.w - 140, y: ARENA.y + 28, w: 80, h: 24 });
+  if (round >= 7) {
+    absorbers.push({ x: ARENA.x + ARENA.w - 136, y: player.y - 14, w: 80, h: 28 });
+  }
 
   const trace = traceBeam(player, angle, ARENA, obstacles, maxBounces, mirrors, absorbers);
   let targets = placeTargetsOnPath(trace.segments, count, player, obstacles, mirrors, absorbers);
@@ -375,7 +495,7 @@ function fallbackPlan(round: number, seed: string): RoundPlan {
   if (targets.length < count) {
     // Straight-line targets on the guaranteed horizontal first leg.
     const start = player.x + 130;
-    const end = ARENA.x + ARENA.w - 60;
+    const end = absorbers.length > 0 ? absorbers[0].x - 60 : ARENA.x + ARENA.w - 60;
     const step = count === 1 ? 0 : (end - start) / (count - 1);
     const positions = Array.from({ length: count }, (_, i) => ({
       x: count === 1 ? (start + end) / 2 : start + step * i,
@@ -458,11 +578,13 @@ export function generateRound(round: number, runSeed = 'PLAY'): RoundPlan {
   const safeRound = Math.max(1, Math.floor(round));
   const seed = seedForRound(runSeed, safeRound);
   const rng = mulberry32(hashSeed(seed));
+  const mirrorCount = rollMirrorCount(safeRound, rng);
+  const obstacleCount = rollObstacleCount(safeRound, rng);
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const plan = generateCandidate(safeRound, rng, seed);
+    const plan = generateCandidate(safeRound, rng, seed, mirrorCount, obstacleCount);
     if (plan) return plan;
   }
 
-  return fallbackPlan(safeRound, seed);
+  return fallbackPlan(safeRound, seed, mirrorCount, obstacleCount);
 }
