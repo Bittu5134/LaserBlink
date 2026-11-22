@@ -1,98 +1,243 @@
 <script lang="ts">
   import { game } from '../game/gameState.svelte';
+  import Icon from './Icon.svelte';
 
   interface Props {
-    onStart: () => void;
+    onStart: (seed?: string) => void;
     onHowToPlay: () => void;
     onFullscreen?: () => void;
   }
 
   let { onStart, onHowToPlay, onFullscreen }: Props = $props();
+
+  let seed = $state('');
+
+  function submit(event: SubmitEvent) {
+    event.preventDefault();
+    const trimmed = seed.trim();
+    onStart(trimmed ? trimmed : undefined);
+  }
 </script>
 
-<div class="relative mx-auto flex w-full max-w-3xl sm:max-w-4xl flex-col items-center justify-center rounded-3xl border-[4.5px] border-[#221811] bg-[#fdf8e6] p-6 text-center shadow-[10px_10px_0px_#181512] sm:p-12">
-  <!-- Cardboard paper tape clips at top -->
-  <div class="absolute -top-4 left-16 h-7 w-28 rounded-md border-2 border-[#181512] bg-[#fef08a] shadow-[2.5px_2.5px_0px_#181512]"></div>
-  <div class="absolute -top-4 right-16 h-7 w-28 rounded-md border-2 border-[#181512] bg-[#fef08a] shadow-[2.5px_2.5px_0px_#181512]"></div>
+<article class="menu-screen">
+  <h1>Laser<span>Blink</span></h1>
 
-  <!-- Best Score Sticker -->
-  <div class="mb-4 inline-flex items-center gap-2 rounded-2xl border-2 border-[#181512] bg-[#fef3c7] px-5 py-2 font-mono shadow-[3px_3px_0px_#181512]">
-    <span class="text-base">🏆</span>
-    <span class="text-xs sm:text-sm font-black uppercase tracking-wider text-[#92400e]">HIGH SCORE:</span>
-    <span class="text-lg sm:text-xl font-black text-[#181512]">{game.highScore.toLocaleString()}</span>
-  </div>
-
-  <!-- Giant Title -->
-  <div class="relative my-3 select-none">
-    <h1 class="font-mono text-6xl font-black tracking-tight text-[#181512] sm:text-8xl">
-      LASER<span class="text-[#ef4444]">BLINK</span>
-    </h1>
-    <!-- Red laser strike underline with intense glow -->
-    <div class="relative mx-auto mt-2 h-2.5 w-full max-w-lg rounded-full bg-gradient-to-r from-transparent via-[#ef4444] to-transparent shadow-[0_0_16px_#ef4444]"></div>
-    <p class="mt-4 font-mono text-sm font-black uppercase tracking-widest text-[#78350f] sm:text-base">
-      MEMORIZE · REFLECT · BURN
-    </p>
-  </div>
-
-  <!-- Geometry Dash Style Giant Play Button -->
-  <div class="my-8">
-    <button
-      onclick={onStart}
-      class="group relative flex h-24 w-72 sm:h-28 sm:w-84 items-center justify-center gap-4 rounded-3xl border-[4.5px] border-[#181512] bg-[#facc15] font-mono text-2xl sm:text-3xl font-black uppercase text-[#181512] shadow-[8px_8px_0px_#181512] transition-all hover:-translate-y-1 hover:bg-[#fde047] hover:shadow-[10px_10px_0px_#181512] active:translate-x-[5px] active:translate-y-[5px] active:shadow-none"
-    >
-      <!-- Geometry Dash triangle play icon -->
-      <span class="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-[#181512] bg-white text-2xl shadow-[3px_3px_0px_#181512] transition-transform group-hover:scale-110">
-        ▶
-      </span>
-      <span>PLAY</span>
-    </button>
-  </div>
-
-  <!-- Secondary Actions -->
-  <div class="flex flex-wrap items-center justify-center gap-3.5">
-    <button
-      onclick={onHowToPlay}
-      class="flex h-12 items-center gap-2 rounded-xl border-2 border-[#181512] bg-white px-6 font-mono text-xs sm:text-sm font-black uppercase text-[#181512] shadow-[3px_3px_0px_#181512] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-    >
-      <span>❓ HOW TO PLAY</span>
+  <form class="menu-form" onsubmit={submit}>
+    <button class="play-btn" type="submit">
+      Play
+      <Icon name="play" size={26} />
     </button>
 
+    <div class="run-row">
+      <label class="run-label" for="run-code">Run code</label>
+      <input
+        id="run-code"
+        class="run-input"
+        bind:value={seed}
+        maxlength="24"
+        placeholder="optional"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      />
+    </div>
+  </form>
+
+  <nav class="menu-tools" aria-label="Menu">
+    <button class="menu-icon" type="button" onclick={onHowToPlay} title="How to play" aria-label="How to play">
+      <Icon name="help" size={21} />
+    </button>
     <button
+      class="menu-icon"
+      type="button"
       onclick={() => game.toggleSound()}
-      class="flex h-12 items-center gap-2 rounded-xl border-2 border-[#181512] bg-white px-5 font-mono text-xs sm:text-sm font-black uppercase text-[#181512] shadow-[3px_3px_0px_#181512] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+      aria-pressed={game.settings.sound}
+      title={game.settings.sound ? 'Turn sound off (M)' : 'Turn sound on (M)'}
+      aria-label={game.settings.sound ? 'Turn sound off' : 'Turn sound on'}
     >
-      <span>{game.settings.sound ? '🔊 SOUND: ON' : '🔇 SOUND: OFF'}</span>
+      <Icon name={game.settings.sound ? 'sound' : 'mute'} size={21} />
     </button>
-
+    <button
+      class="menu-icon"
+      type="button"
+      onclick={() => game.toggleReducedMotion()}
+      aria-pressed={game.settings.reducedMotion}
+      title={game.settings.reducedMotion ? 'Turn reduced motion off' : 'Turn reduced motion on'}
+      aria-label={game.settings.reducedMotion ? 'Turn reduced motion off' : 'Turn reduced motion on'}
+    >
+      <Icon name="motion" size={21} />
+    </button>
     {#if onFullscreen}
-      <button
-        onclick={onFullscreen}
-        class="flex h-12 items-center gap-2 rounded-xl border-2 border-[#181512] bg-white px-5 font-mono text-xs sm:text-sm font-black uppercase text-[#181512] shadow-[3px_3px_0px_#181512] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-      >
-        <span>⛶ FULLSCREEN</span>
+      <button class="menu-icon" type="button" onclick={onFullscreen} title="Fullscreen (F)" aria-label="Toggle fullscreen">
+        <Icon name="fullscreen" size={21} />
       </button>
     {/if}
-  </div>
+  </nav>
+</article>
 
-  <!-- Quick Rules Preview Strip -->
-  <div class="mt-10 grid w-full grid-cols-1 gap-4 text-left sm:grid-cols-3">
-    <div class="rounded-2xl border-2 border-[#181512] bg-white/80 p-4 shadow-[3px_3px_0px_#181512]">
-      <div class="font-mono text-xs sm:text-sm font-black text-[#dc2626]">1. FLASH & MEMORIZE</div>
-      <div class="mt-1.5 font-mono text-xs font-bold text-[#4b5563]">
-        Paper balls appear along a ricochet path. Memorize their spots before they vanish!
-      </div>
-    </div>
-    <div class="rounded-2xl border-2 border-[#181512] bg-white/80 p-4 shadow-[3px_3px_0px_#181512]">
-      <div class="font-mono text-xs sm:text-sm font-black text-[#ca8a04]">2. BLINK & AIM</div>
-      <div class="mt-1.5 font-mono text-xs font-bold text-[#4b5563]">
-        The balls disappear! Drag or use arrow keys to aim your laser reflecting off the walls.
-      </div>
-    </div>
-    <div class="rounded-2xl border-2 border-[#181512] bg-white/80 p-4 shadow-[3px_3px_0px_#181512]">
-      <div class="font-mono text-xs sm:text-sm font-black text-[#16a34a]">3. BURN & SCORE</div>
-      <div class="mt-1.5 font-mono text-xs font-bold text-[#4b5563]">
-        Press SPACE to fire! The laser burns the paper balls to charred ash for massive score!
-      </div>
-    </div>
-  </div>
-</div>
+<style>
+  .menu-screen {
+    width: min(100%, 1100px);
+    min-height: calc(100dvh - 24px);
+    margin: auto;
+    padding: 24px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(26px, 5vh, 48px);
+    text-align: center;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 13vw, 9.5rem);
+    font-weight: 800;
+    line-height: 0.82;
+    letter-spacing: -0.055em;
+    color: var(--color-paper);
+    text-shadow:
+      0 2px 0 rgba(83, 43, 23, 0.9),
+      0 10px 28px rgba(0, 0, 0, 0.55);
+    transform: rotate(-0.8deg);
+  }
+
+  h1 span {
+    color: var(--color-laser);
+  }
+
+  .menu-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(18px, 3vh, 28px);
+  }
+
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: min(320px, 82vw);
+    min-height: 76px;
+    padding: 1rem 2.4rem;
+    border: 2px solid var(--color-ink);
+    border-radius: 2px;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.35rem, 3vw, 1.7rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.42);
+    transform: rotate(-0.7deg);
+    transition:
+      transform 0.14s ease,
+      box-shadow 0.14s ease,
+      background-color 0.14s ease;
+  }
+
+  .play-btn:hover {
+    background: #fffaf0;
+    transform: rotate(-0.7deg) translate(-1px, -2px);
+    box-shadow: 9px 9px 0 rgba(0, 0, 0, 0.44);
+  }
+
+  .play-btn:active {
+    transform: rotate(-0.7deg) translate(3px, 3px);
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.42);
+  }
+
+  .run-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .run-label {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(251, 244, 227, 0.68);
+    white-space: nowrap;
+  }
+
+  .run-input {
+    width: min(180px, 46vw);
+    min-height: 40px;
+    padding: 2px 2px 5px;
+    border: 0;
+    border-bottom: 1px solid rgba(251, 244, 227, 0.45);
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-paper);
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .run-input::placeholder {
+    color: rgba(251, 244, 227, 0.4);
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+
+  .run-input:focus {
+    outline: none;
+    border-bottom-color: var(--color-paper);
+  }
+
+  .menu-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .menu-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(251, 244, 227, 0.68);
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .menu-icon:hover {
+    border-color: rgba(251, 244, 227, 0.45);
+    background: rgba(0, 0, 0, 0.16);
+    color: var(--color-paper);
+  }
+
+  @media (max-width: 460px) {
+    .menu-screen {
+      gap: 24px;
+    }
+
+    .play-btn {
+      min-height: 68px;
+    }
+
+    .run-row {
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .run-input {
+      width: min(260px, 72vw);
+      text-align: center;
+    }
+  }
+</style>

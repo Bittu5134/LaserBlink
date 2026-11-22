@@ -1,5 +1,5 @@
 import type { Phase, RoundPlan, RoundResult, Segment, Settings, TargetResult } from './types';
-import { ARENA, createRunSeed, generateRound } from './level';
+import { ARENA, CANVAS, createRunSeed, generateRound } from './level';
 import { traceBeam } from './beam';
 import { evaluateShot, gradeRound, scoreRound } from './scoring';
 import { sounds } from './audio';
@@ -35,6 +35,7 @@ export class GameController {
 
   beamProgress = $state<number>(0);
   studyCountdown = $state<number>(0);
+  studyEndsAt = $state<number>(0);
   burntTargetIds = $state<Set<number>>(new Set());
 
   totalHits = $state<number>(0);
@@ -64,6 +65,8 @@ export class GameController {
   private lastTickSecond = -1;
   private pendingResult: RoundResult | null = null;
   private runStartHighScore = 0;
+  private fieldW = 0;
+  private fieldH = 0;
 
   constructor() {
     this.loadHighScore();
@@ -168,6 +171,8 @@ export class GameController {
 
     this.round = Math.min(Math.max(1, roundNumber), RUN_LENGTH);
     this.plan = generateRound(this.round, this.runSeed);
+    this.fieldW = CANVAS.w;
+    this.fieldH = CANVAS.h;
     this.angle = -Math.PI / 4;
     this.beamProgress = 0;
     this.burntTargetIds = new Set();
@@ -184,6 +189,7 @@ export class GameController {
 
     this.phase = 'study';
     this.studyCountdown = this.plan.studySeconds;
+    this.studyEndsAt = performance.now() + this.plan.studySeconds * 1000;
     this.lastTickSecond = Math.ceil(this.studyCountdown);
 
     sounds.setScene('study');
@@ -212,7 +218,27 @@ export class GameController {
     sounds.setScene('aim');
     this.phase = 'aim';
     this.studyCountdown = 0;
+    this.studyEndsAt = 0;
     this.recalculateBeam();
+  }
+
+  // Right-click and the primary key do the same thing: move the page forward.
+  advance() {
+    if (this.phase === 'study') {
+      this.enterAimPhase();
+    } else if (this.phase === 'aim') {
+      this.fireLaser();
+    } else if (this.phase === 'reveal') {
+      this.nextRound();
+    }
+  }
+
+  // The canvas owns the window, so a resize reshapes the field. Pages are only
+  // rebuilt while the field is being studied, never in the middle of a shot.
+  syncPlayfield() {
+    if (this.phase !== 'study' || !this.plan) return;
+    if (CANVAS.w === this.fieldW && CANVAS.h === this.fieldH) return;
+    this.startRound(this.round);
   }
 
   setAimAngle(angle: number) {

@@ -1,85 +1,250 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { game } from '../game/gameState.svelte';
+  import Icon from './Icon.svelte';
+
   interface Props {
     onClose: () => void;
   }
 
   let { onClose }: Props = $props();
+  let sheet = $state<HTMLElement | null>(null);
+
+  onMount(() => {
+    sheet?.focus();
+  });
+
+  function backdropClick(event: MouseEvent) {
+    if (event.target === event.currentTarget) onClose();
+  }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-  <div class="relative w-full max-w-lg rounded-2xl border-[4px] border-[#181512] bg-[#fdf8e6] p-6 text-left shadow-[8px_8px_0px_#181512] sm:p-8">
-    <!-- Header -->
-    <div class="flex items-center justify-between border-b-2 border-[#181512] pb-3">
-      <div class="flex items-center gap-2 font-mono text-xl font-black uppercase text-[#181512]">
-        <span>🔥</span>
-        <span>HOW TO PLAY LASERBLINK</span>
-      </div>
-      <button
-        onclick={onClose}
-        class="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-[#181512] bg-white font-mono text-base font-black text-[#181512] shadow-[2px_2px_0px_#181512] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none"
-      >
-        ✕
+<div class="modal-veil" onclick={backdropClick} role="presentation">
+  <div
+    bind:this={sheet}
+    class="modal-sheet"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="help-title"
+    tabindex="-1"
+  >
+    <header class="help-head">
+      <h2 id="help-title">How to play</h2>
+      <button class="icon-btn" type="button" onclick={onClose} title="Close help (Escape)" aria-label="Close help">
+        <Icon name="close" size={19} />
       </button>
-    </div>
+    </header>
 
-    <!-- 3 Rules Steps -->
-    <div class="my-5 flex flex-col gap-3 font-mono">
-      <div class="flex gap-3 rounded-xl border-2 border-[#181512] bg-white p-3 shadow-[2px_2px_0px_#181512]">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#fef08a] font-black text-[#854d0e]">
-          1
-        </div>
+    <ol class="help-steps">
+      <li>
+        <span class="step-num">01</span>
         <div>
-          <div class="text-xs font-black uppercase text-[#dc2626]">MEMORIZE THE PAPER BALLS</div>
-          <div class="mt-0.5 text-xs text-[#4b5563]">
-            Crumpled paper balls appear on the scratchpad paper. You have a few seconds to memorize their spots before they vanish!
-          </div>
+          <h3>Study</h3>
+          <p>Targets show for a few seconds.</p>
         </div>
-      </div>
-
-      <div class="flex gap-3 rounded-xl border-2 border-[#181512] bg-white p-3 shadow-[2px_2px_0px_#181512]">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#fef08a] font-black text-[#854d0e]">
-          2
-        </div>
+      </li>
+      <li>
+        <span class="step-num">02</span>
         <div>
-          <div class="text-xs font-black uppercase text-[#ca8a04]">BLINK & AIM OFF THE EDGES</div>
-          <div class="mt-0.5 text-xs text-[#4b5563]">
-            The balls disappear! Drag or use arrow keys to aim your laser pointer. The beam reflects off the walls up to the bounce limit.
-          </div>
+          <h3>Draw</h3>
+          <p>Drag or use the arrows. Shift makes fine steps.</p>
         </div>
-      </div>
-
-      <div class="flex gap-3 rounded-xl border-2 border-[#181512] bg-white p-3 shadow-[2px_2px_0px_#181512]">
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#fef08a] font-black text-[#854d0e]">
-          3
-        </div>
+      </li>
+      <li>
+        <span class="step-num">03</span>
         <div>
-          <div class="text-xs font-black uppercase text-[#16a34a]">FIRE, BURN & MULTI-COMBO</div>
-          <div class="mt-0.5 text-xs text-[#4b5563]">
-            Press SPACE or FIRE! The laser surges forward, reveals the hidden balls, and scorches them to ash. Burning multiple balls gives huge combo multipliers!
-          </div>
+          <h3>Ink</h3>
+          <p>Trace shows the full line. Three per page.</p>
         </div>
+      </li>
+      <li>
+        <span class="step-num">04</span>
+        <div>
+          <h3>Fire</h3>
+          <p>One shot. Hit the quota to pass. A miss costs one mistake.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="controls-block">
+      <p class="label">Keys</p>
+      <dl class="control-list">
+        <div><dt><span class="key">Space</span></dt><dd>Start, fire, next</dd></div>
+        <div><dt><span class="key">&larr;</span> <span class="key">&rarr;</span> / <span class="key">A</span> <span class="key">D</span></dt><dd>Aim, Shift fine</dd></div>
+        <div><dt><span class="key">I</span></dt><dd>Trace ink</dd></div>
+        <div><dt>Right-click</dt><dd>Fire</dd></div>
+        <div><dt><span class="key">M</span></dt><dd>Sound</dd></div>
+        <div><dt><span class="key">V</span></dt><dd>Reduced motion</dd></div>
+        <div><dt><span class="key">F</span></dt><dd>Fullscreen</dd></div>
+        <div><dt><span class="key">Esc</span></dt><dd>Close help</dd></div>
+      </dl>
+    </div>
+
+    <div class="settings-block">
+      <p class="label">Settings</p>
+      <div class="setting-row">
+        <button
+          class="btn btn-quiet"
+          type="button"
+          onclick={() => game.toggleSound()}
+          aria-pressed={game.settings.sound}
+        >
+          <Icon name={game.settings.sound ? 'sound' : 'mute'} size={16} />
+          Sound: {game.settings.sound ? 'on' : 'off'}
+        </button>
+        <button
+          class="btn btn-quiet"
+          type="button"
+          onclick={() => game.toggleReducedMotion()}
+          aria-pressed={game.settings.reducedMotion}
+        >
+          <Icon name="motion" size={16} />
+          Reduced motion: {game.settings.reducedMotion ? 'on' : 'off'}
+        </button>
       </div>
     </div>
 
-    <!-- Controls Box -->
-    <div class="rounded-xl border-2 border-[#181512] bg-[#f8fafc] p-3 font-mono text-xs shadow-[2px_2px_0px_#181512]">
-      <div class="font-black text-[#334155] uppercase">KEYBOARD CONTROLS</div>
-      <div class="mt-2 grid grid-cols-2 gap-2 text-[11px] text-[#475569]">
-        <div><span class="rounded border border-[#cbd5e1] bg-white px-1.5 py-0.5 font-bold">SPACE</span> Fire / Next Round</div>
-        <div><span class="rounded border border-[#cbd5e1] bg-white px-1.5 py-0.5 font-bold">← → / A D</span> Fine-tune Aim</div>
-        <div><span class="rounded border border-[#cbd5e1] bg-white px-1.5 py-0.5 font-bold">M</span> Toggle Sound</div>
-        <div><span class="rounded border border-[#cbd5e1] bg-white px-1.5 py-0.5 font-bold">ESC</span> Exit to Menu</div>
-      </div>
-    </div>
-
-    <!-- Close button -->
-    <div class="mt-5">
-      <button
-        onclick={onClose}
-        class="flex h-11 w-full items-center justify-center rounded-xl border-[3px] border-[#181512] bg-[#facc15] font-mono text-sm font-black uppercase text-[#181512] shadow-[3px_3px_0px_#181512] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-      >
-        GOT IT, LET'S PLAY!
-      </button>
-    </div>
+    <button class="btn btn-primary close-btn" type="button" onclick={onClose}>
+      Close
+    </button>
   </div>
 </div>
+
+<style>
+  .modal-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    overflow-y: auto;
+    background: rgba(8, 6, 4, 0.72);
+    backdrop-filter: blur(3px);
+  }
+
+  .modal-sheet {
+    width: min(100%, 560px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    padding: clamp(20px, 3.5vw, 30px);
+    background: var(--color-paper);
+    border: 1px solid var(--color-ink-soft);
+    box-shadow:
+      0 40px 80px -30px rgba(0, 0, 0, 0.85),
+      0 6px 16px rgba(0, 0, 0, 0.3);
+    animation: var(--animate-pop-in);
+  }
+
+  .modal-sheet:focus {
+    outline: none;
+  }
+
+  .help-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-ink);
+  }
+
+  .help-head h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4.6vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .help-steps {
+    display: grid;
+    gap: 0;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .help-steps li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px dashed var(--color-rule);
+  }
+
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-laser-deep);
+    padding-top: 2px;
+  }
+
+  .help-steps h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .help-steps p {
+    margin-top: 1px;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--color-ink-soft);
+  }
+
+  .controls-block,
+  .settings-block {
+    margin-top: 14px;
+  }
+
+  .control-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 18px;
+    margin: 7px 0 0;
+  }
+
+  .control-list > div {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .control-list dt {
+    flex: 0 0 auto;
+  }
+
+  .control-list dd {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--color-ink-soft);
+  }
+
+  .setting-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .setting-row .btn {
+    min-height: 40px;
+    font-size: 0.875rem;
+  }
+
+  .close-btn {
+    width: 100%;
+    margin-top: 18px;
+    min-height: 50px;
+  }
+
+  @media (max-width: 480px) {
+    .control-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,178 +1,224 @@
 <script lang="ts">
-  import { game } from '../game/gameState.svelte';
+  import { game, RUN_LENGTH } from '../game/gameState.svelte';
+  import Icon from './Icon.svelte';
 
   interface Props {
-    onFire: () => void;
-    onNext: () => void;
     onMenu: () => void;
+    onHelp: () => void;
     onFullscreen?: () => void;
   }
 
-  let { onFire, onNext, onMenu, onFullscreen }: Props = $props();
+  let { onMenu, onHelp, onFullscreen }: Props = $props();
 
-  const studyProgress = $derived(() => {
-    if (!game.plan || game.plan.studySeconds <= 0) return 0;
-    return Math.max(0, Math.min(100, (game.studyCountdown / game.plan.studySeconds) * 100));
-  });
+  const targetCount = $derived(game.plan?.targets.length ?? 0);
+  const requiredHits = $derived(game.plan?.requiredHits ?? 0);
+
+  const announcement = $derived(
+    game.phase === 'study'
+      ? `Study phase. ${targetCount} targets.`
+      : game.phase === 'aim'
+        ? `Aim phase. Burn ${requiredHits} of ${targetCount} to pass this page.`
+        : game.phase === 'firing'
+          ? 'Laser firing.'
+          : `Reveal. ${game.results?.hits ?? 0} of ${game.results?.total ?? targetCount} burned. ${
+              game.roundPassed ? 'Page passed.' : 'Page failed, one mistake used.'
+            }`,
+  );
 </script>
 
-<!-- TOP HUD BAR: Geometry Dash Arcade style with Scratchpad Flair -->
-<div class="mb-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border-[3.5px] border-[#221811] bg-[#fffcf2] px-4 py-2.5 shadow-[5px_5px_0px_#181512] sm:px-6">
-  <!-- Left: Round Badge, Lives & Fullscreen -->
-  <div class="flex items-center gap-2.5 sm:gap-3.5">
-    <button
-      onclick={onMenu}
-      class="flex h-10 items-center justify-center rounded-xl border-2 border-[#181512] bg-[#fef08a] px-3.5 font-mono text-xs font-black uppercase text-[#181512] shadow-[2.5px_2.5px_0px_#181512] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-[#fde047]"
-      title="Exit to menu"
-    >
-      ◀ MENU
+<aside class="rail rail-left">
+  <div class="chip page-chip" aria-label={`Page ${game.round} of ${RUN_LENGTH}`}>
+    <span class="page-now">{String(game.round).padStart(2, '0')}</span>
+    <span class="page-total">/{RUN_LENGTH}</span>
+  </div>
+
+  <div class="chip lives-chip" aria-label={`${game.lives} of ${game.maxLives} mistakes left`}>
+    {#each Array(game.maxLives) as _, index}
+      <span class="ball" class:is-lost={index >= game.lives}></span>
+    {/each}
+  </div>
+
+  <div class="chip score-chip">
+    <span class="chip-label">Score</span>
+    <strong>{game.score.toLocaleString()}</strong>
+  </div>
+
+  <nav class="tools" aria-label="Game controls">
+    <button class="tool" type="button" onclick={onMenu} title="Cover" aria-label="Back to the cover">
+      <Icon name="menu" size={19} />
     </button>
-
-    <div class="flex items-center gap-2 rounded-xl border-2 border-[#181512] bg-[#fef9c3] px-3.5 py-1 font-mono text-sm font-black text-[#181512] shadow-[2.5px_2.5px_0px_#181512]">
-      <span class="text-xs uppercase text-[#713f12]">STAGE</span>
-      <span class="text-lg text-[#ca8a04]">{String(game.round).padStart(2, '0')}</span>
-    </div>
-
-    <!-- Paper ball lives -->
-    <div class="flex items-center gap-1.5" title="Paper Shields (Lives)">
-      {#each Array(game.maxLives) as _, i}
-        <span
-          class="text-xl transition-all duration-200"
-          class:opacity-20={i >= game.lives}
-          class:scale-110={i < game.lives}
-        >
-          📄
-        </span>
-      {/each}
-    </div>
-  </div>
-
-  <!-- Center: Phase Status & Countdown Bar -->
-  <div class="flex min-w-[240px] flex-1 flex-col items-center justify-center px-2">
-    {#if game.phase === 'study'}
-      <div class="flex items-center gap-2 font-mono text-xs font-black tracking-wider text-[#b45309] sm:text-sm">
-        <span class="animate-pulse">👀</span>
-        <span>MEMORIZE BALLS:</span>
-        <span class="rounded bg-[#fef08a] px-2 py-0.5 text-base font-black text-[#181512]">{game.studyCountdown.toFixed(1)}s</span>
-      </div>
-      <!-- Geometry Dash style countdown bar -->
-      <div class="mt-1 h-3.5 w-full max-w-sm overflow-hidden rounded-full border-2 border-[#181512] bg-[#e5e7eb]">
-        <div
-          class="h-full bg-gradient-to-r from-[#eab308] to-[#ef4444] transition-all duration-100"
-          style="width: {studyProgress()}%;"
-        ></div>
-      </div>
-    {:else if game.phase === 'aim'}
-      <div class="flex items-center gap-2 font-mono text-xs font-black tracking-wider text-[#dc2626] sm:text-sm">
-        <span class="inline-block animate-bounce">⚡</span>
-        <span>AIM & BOUNCE OFF EDGES!</span>
-      </div>
-      <div class="mt-0.5 font-mono text-[11px] font-bold text-[#6b7280]">
-        TARGETS HIDDEN · {game.plan?.maxBounces ?? 3} BOUNCES ALLOWED
-      </div>
-    {:else if game.phase === 'firing'}
-      <div class="flex items-center gap-2 font-mono text-xs font-black tracking-wider text-[#ea580c] sm:text-sm">
-        <span class="animate-spin">🔥</span>
-        <span>BURNING TARGETS...</span>
-      </div>
-    {:else if game.phase === 'reveal'}
-      <div class="flex items-center gap-2 font-mono text-xs font-black tracking-wider text-[#16a34a] sm:text-sm">
-        <span>✨</span>
-        <span>{game.results?.hits ?? 0}/{game.results?.total ?? 0} BURNT!</span>
-        {#if game.roundPerfect}
-          <span class="rounded bg-[#fde047] px-2 py-0.5 text-[#181512]">PERFECT ASH!</span>
-        {/if}
-      </div>
-    {/if}
-  </div>
-
-  <!-- Right: Score, High Score & Fullscreen -->
-  <div class="flex items-center gap-2.5">
-    <div class="rounded-xl border-2 border-[#181512] bg-[#f8fafc] px-3.5 py-1 text-right font-mono shadow-[2.5px_2.5px_0px_#181512]">
-      <div class="text-[10px] font-bold uppercase tracking-wider text-[#64748b]">SCORE</div>
-      <div class="text-lg font-black text-[#0f172a]">{game.score.toLocaleString()}</div>
-    </div>
-
-    <div class="hidden sm:block rounded-xl border-2 border-[#181512] bg-[#fef3c7] px-3.5 py-1 text-right font-mono shadow-[2.5px_2.5px_0px_#181512]">
-      <div class="text-[10px] font-bold uppercase tracking-wider text-[#b45309]">BEST</div>
-      <div class="text-lg font-black text-[#92400e]">{game.highScore.toLocaleString()}</div>
-    </div>
-
-    {#if onFullscreen}
-      <button
-        onclick={onFullscreen}
-        class="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl border-2 border-[#181512] bg-white text-sm shadow-[2.5px_2.5px_0px_#181512] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-[#f1f5f9]"
-        title="Toggle Fullscreen (F)"
-        aria-label="Toggle Fullscreen"
-      >
-        ⛶
-      </button>
-    {/if}
-  </div>
-</div>
-
-<!-- BOTTOM ACTION BAR: Geometry Dash chunky buttons -->
-<div class="mt-3 flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl border-[3.5px] border-[#221811] bg-[#fffcf2] px-4 py-2.5 shadow-[5px_5px_0px_#181512] sm:px-6">
-  <!-- Left: Audio & Assist Controls -->
-  <div class="flex items-center gap-2.5">
+    <button class="tool" type="button" onclick={onHelp} title="How to play (?)" aria-label="How to play">
+      <Icon name="help" size={19} />
+    </button>
     <button
+      class="tool"
+      type="button"
       onclick={() => game.toggleSound()}
-      class="flex h-11 w-11 items-center justify-center rounded-xl border-2 border-[#181512] bg-[#f1f5f9] text-lg shadow-[2.5px_2.5px_0px_#181512] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-white"
-      title={game.settings.sound ? 'Mute sound (M)' : 'Unmute sound (M)'}
-      aria-label="Toggle Sound"
+      aria-pressed={game.settings.sound}
+      title={game.settings.sound ? 'Sound off (M)' : 'Sound on (M)'}
+      aria-label={game.settings.sound ? 'Turn sound off' : 'Turn sound on'}
     >
-      {game.settings.sound ? '🔊' : '🔇'}
+      <Icon name={game.settings.sound ? 'sound' : 'mute'} size={19} />
     </button>
-
     <button
-      onclick={() => game.toggleAssist()}
-      class="flex h-11 items-center gap-1.5 rounded-xl border-2 border-[#181512] bg-[#f1f5f9] px-3.5 font-mono text-xs font-bold text-[#181512] shadow-[2.5px_2.5px_0px_#181512] transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none hover:bg-white"
-      title="Toggle assist mode (Aim dots / Full circle guide)"
+      class="tool"
+      type="button"
+      onclick={() => game.toggleReducedMotion()}
+      aria-pressed={game.settings.reducedMotion}
+      title={game.settings.reducedMotion ? 'Motion off (V)' : 'Reduced motion (V)'}
+      aria-label={game.settings.reducedMotion ? 'Turn reduced motion off' : 'Turn reduced motion on'}
     >
-      <span>GUIDE:</span>
-      <span class="font-black uppercase text-[#2563eb]">{game.settings.assist}</span>
+      <Icon name="motion" size={19} />
     </button>
-
-    <div class="hidden lg:flex items-center gap-1.5 font-mono text-xs font-semibold text-[#64748b] ml-3">
-      <span class="rounded border border-[#cbd5e1] bg-[#f8fafc] px-1.5 py-0.5">DRAG</span> to aim ·
-      <span class="rounded border border-[#cbd5e1] bg-[#f8fafc] px-1.5 py-0.5">SPACE</span> to fire ·
-      <span class="rounded border border-[#cbd5e1] bg-[#f8fafc] px-1.5 py-0.5">F</span> fullscreen
-    </div>
-  </div>
-
-  <!-- Right: Big Chunky Geometry Dash Action Button -->
-  <div class="flex items-center gap-3">
-    {#if game.phase === 'study'}
-      <button
-        onclick={() => game.enterAimPhase()}
-        class="flex h-13 items-center gap-2.5 rounded-2xl border-[3.5px] border-[#181512] bg-[#fef08a] px-7 font-mono text-base font-black uppercase text-[#181512] shadow-[4px_4px_0px_#181512] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#181512] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none hover:bg-[#fde047]"
-      >
-        <span>READY NOW</span>
-        <span class="text-lg">⚡</span>
-      </button>
-    {:else if game.phase === 'aim'}
-      <button
-        onclick={onFire}
-        class="flex h-13 animate-pulse items-center gap-3 rounded-2xl border-[3.5px] border-[#181512] bg-[#ef4444] px-8 font-mono text-lg font-black uppercase text-white shadow-[5px_5px_0px_#181512] transition-all hover:brightness-110 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
-      >
-        <span>🔥 FIRE LASER</span>
-        <span class="rounded-lg bg-white/25 px-2 py-0.5 text-xs text-white">SPACE</span>
-      </button>
-    {:else if game.phase === 'firing'}
-      <button
-        disabled
-        class="flex h-13 cursor-not-allowed items-center gap-2.5 rounded-2xl border-[3.5px] border-[#181512] bg-[#f97316] px-7 font-mono text-base font-black uppercase text-white opacity-90 shadow-[2.5px_2.5px_0px_#181512]"
-      >
-        <span>⚡ FIRING...</span>
-      </button>
-    {:else if game.phase === 'reveal'}
-      <button
-        onclick={onNext}
-        class="flex h-13 items-center gap-2.5 rounded-2xl border-[3.5px] border-[#181512] bg-[#22c55e] px-8 font-mono text-lg font-black uppercase text-white shadow-[5px_5px_0px_#181512] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#181512] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none hover:bg-[#16a34a]"
-      >
-        <span>NEXT ROUND</span>
-        <span class="text-xl">➔</span>
+    {#if onFullscreen}
+      <button class="tool" type="button" onclick={onFullscreen} title="Fullscreen (F)" aria-label="Toggle fullscreen">
+        <Icon name="fullscreen" size={19} />
       </button>
     {/if}
-  </div>
-</div>
+  </nav>
+
+  <p class="sr-only" aria-live="polite">{announcement}</p>
+</aside>
+
+<style>
+  .rail-left {
+    position: fixed;
+    z-index: 10;
+    top: clamp(10px, 2vh, 20px);
+    left: clamp(10px, 1.8vw, 22px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border: 1px solid rgba(247, 235, 208, 0.2);
+    border-radius: 2px;
+    background: rgba(28, 19, 11, 0.74);
+    color: #fbf3e1;
+    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.8);
+  }
+
+  .page-chip {
+    align-items: baseline;
+    gap: 3px;
+  }
+
+  .page-now {
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .page-total {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    font-weight: 700;
+    opacity: 0.74;
+  }
+
+  .lives-chip {
+    gap: 7px;
+    padding: 10px 12px;
+  }
+
+  .ball {
+    width: 14px;
+    height: 14px;
+    border-radius: 48% 52% 46% 54% / 52% 46% 54% 48%;
+    background: radial-gradient(circle at 34% 28%, #fffaf0, #ddcbaa 58%, #a08a64 100%);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
+  .ball.is-lost {
+    background: transparent;
+    border: 1.5px solid rgba(247, 235, 208, 0.34);
+    box-shadow: none;
+  }
+
+  .score-chip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 6px 12px 7px;
+  }
+
+  .chip-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.72;
+  }
+
+  .score-chip strong {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 4px;
+    border: 1px solid rgba(247, 235, 208, 0.16);
+    border-radius: 999px;
+    background: rgba(28, 19, 11, 0.62);
+    pointer-events: auto;
+  }
+
+  .tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: rgba(251, 243, 225, 0.78);
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  .tool:hover {
+    border-color: rgba(247, 235, 208, 0.42);
+    background: rgba(0, 0, 0, 0.22);
+    color: #fbf3e1;
+  }
+
+  @media (max-width: 720px) {
+    .rail-left {
+      gap: 6px;
+    }
+
+    .page-now {
+      font-size: 1.5rem;
+    }
+
+    .score-chip strong {
+      font-size: 1.25rem;
+    }
+
+    .tool {
+      width: 40px;
+      height: 40px;
+    }
+  }
+</style>

@@ -1,69 +1,170 @@
 <script lang="ts">
   import { game } from '../game/gameState.svelte';
+  import Icon from './Icon.svelte';
 
   interface Props {
     onRetry: () => void;
+    onNewRun: () => void;
     onMenu: () => void;
   }
 
-  let { onRetry, onMenu }: Props = $props();
+  let { onRetry, onNewRun, onMenu }: Props = $props();
 
-  const isNewHigh = $derived(game.score > 0 && game.score >= game.highScore);
+  let copied = $state(false);
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const won = $derived(game.phase === 'victory');
+
+  async function copyCode() {
+    if (!game.runSeed) return;
+    try {
+      await navigator.clipboard.writeText(game.runSeed);
+      copied = true;
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => (copied = false), 1800);
+    } catch {
+      copied = false;
+    }
+  }
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-  <div class="relative w-full max-w-md rounded-2xl border-[4px] border-[#181512] bg-[#fdf8e6] p-6 text-center shadow-[8px_8px_0px_#181512] sm:p-8">
-    <!-- Charred Burn Stamp Header -->
-    <div class="mx-auto -mt-2 mb-4 inline-block -rotate-2 rounded-xl border-[3.5px] border-[#dc2626] bg-[#fee2e2] px-6 py-2 shadow-[4px_4px_0px_#dc2626]">
-      <h2 class="font-mono text-3xl font-black uppercase tracking-wider text-[#991b1b] sm:text-4xl">
-        GAME OVER
-      </h2>
+<div class="modal-veil">
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="run-end-title">
+    <h2 id="run-end-title">{won ? 'Notebook complete' : 'Game over'}</h2>
+
+    <div class="final-score">
+      <span class="label">Score</span>
+      <strong>{game.score.toLocaleString()}</strong>
     </div>
 
-    {#if isNewHigh}
-      <div class="mb-4 inline-flex items-center gap-1.5 rounded-full border-2 border-[#181512] bg-[#fef08a] px-4 py-1 font-mono text-xs font-black text-[#854d0e] shadow-[2px_2px_0px_#181512]">
-        <span>🎉</span> NEW HIGH SCORE!
+    <div class="run-code">
+      <div>
+        <span class="label">Run code</span>
+        <code>{game.runSeed || 'none'}</code>
       </div>
-    {/if}
-
-    <!-- Score Card -->
-    <div class="my-4 rounded-xl border-2 border-[#181512] bg-white p-4 shadow-[3px_3px_0px_#181512]">
-      <div class="font-mono text-xs font-black uppercase text-[#64748b]">FINAL SCORE</div>
-      <div class="font-mono text-4xl font-black text-[#0f172a] sm:text-5xl">
-        {game.score.toLocaleString()}
-      </div>
-
-      <div class="mt-4 grid grid-cols-3 divide-x-2 divide-[#e2e8f0] border-t-2 border-[#e2e8f0] pt-3 font-mono">
-        <div>
-          <div class="text-[10px] font-bold text-[#64748b]">STAGE</div>
-          <div class="text-base font-black text-[#181512]">{game.round}</div>
-        </div>
-        <div>
-          <div class="text-[10px] font-bold text-[#64748b]">BALLS BURNED</div>
-          <div class="text-base font-black text-[#ea580c]">{game.totalBallsBurned}</div>
-        </div>
-        <div>
-          <div class="text-[10px] font-bold text-[#64748b]">BEST</div>
-          <div class="text-base font-black text-[#ca8a04]">{game.highScore.toLocaleString()}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Action Buttons: Chunky Geometry Dash Sizing -->
-    <div class="mt-6 flex flex-col gap-3">
       <button
-        onclick={onRetry}
-        class="flex h-14 w-full items-center justify-center gap-2 rounded-xl border-[3px] border-[#181512] bg-[#facc15] font-mono text-lg font-black uppercase text-[#181512] shadow-[4px_4px_0px_#181512] transition-transform hover:-translate-y-0.5 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none"
+        class="icon-btn"
+        type="button"
+        onclick={copyCode}
+        title="Copy run code"
+        aria-label={copied ? 'Run code copied' : 'Copy run code'}
+        disabled={!game.runSeed}
       >
-        <span>🔄 PLAY AGAIN</span>
+        <Icon name={copied ? 'check' : 'copy'} size={18} />
       </button>
+    </div>
+    <p class="sr-only" aria-live="polite">{copied ? 'Run code copied to clipboard' : ''}</p>
 
-      <button
-        onclick={onMenu}
-        class="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#181512] bg-white font-mono text-sm font-black uppercase text-[#181512] shadow-[3px_3px_0px_#181512] transition-transform hover:-translate-y-0.5 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-      >
-        <span>◀ MAIN MENU</span>
+    <div class="modal-actions">
+      <button class="btn btn-primary modal-primary" type="button" onclick={onRetry}>
+        <Icon name="play" size={17} />
+        Replay
+      </button>
+      <button class="btn" type="button" onclick={onNewRun}>
+        New notebook
+      </button>
+      <button class="btn btn-quiet" type="button" onclick={onMenu}>
+        Cover
       </button>
     </div>
   </div>
 </div>
+
+<style>
+  .modal-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    overflow-y: auto;
+    background: rgba(8, 6, 4, 0.72);
+    backdrop-filter: blur(3px);
+  }
+
+  .modal-sheet {
+    width: min(100%, 500px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    padding: clamp(22px, 4vw, 34px);
+    background: var(--color-paper);
+    background-image: repeating-linear-gradient(0deg, transparent 0 33px, rgba(27, 40, 50, 0.024) 33px 34px);
+    border: 1px solid var(--color-ink-soft);
+    box-shadow:
+      0 40px 80px -30px rgba(0, 0, 0, 0.85),
+      0 6px 16px rgba(0, 0, 0, 0.3);
+    animation: var(--animate-pop-in);
+  }
+
+  .modal-sheet h2 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5.4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+  }
+
+  .final-score {
+    display: grid;
+    gap: 2px;
+    margin-top: 14px;
+    padding: 14px 0;
+    border-top: 1px solid var(--color-ink);
+    border-bottom: 1px dashed var(--color-rule);
+  }
+
+  .final-score strong {
+    font-family: var(--font-mono);
+    font-size: clamp(2.4rem, 8vw, 3.4rem);
+    line-height: 1;
+    letter-spacing: -0.06em;
+  }
+
+  .run-code {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 16px;
+    padding: 10px 12px;
+    border: 1px dashed var(--color-ink-faint);
+  }
+
+  .run-code code {
+    display: block;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--color-ink);
+  }
+
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .modal-primary {
+    grid-column: 1 / -1;
+    min-height: 54px;
+  }
+
+  .modal-actions .btn-quiet {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 460px) {
+    .modal-actions {
+      grid-template-columns: 1fr;
+    }
+
+    .modal-primary,
+    .modal-actions .btn-quiet {
+      grid-column: auto;
+    }
+  }
+</style>

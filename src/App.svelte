@@ -3,123 +3,206 @@
   import GameCanvas from './lib/GameCanvas.svelte';
   import HudBar from './lib/HudBar.svelte';
   import StartMenu from './lib/StartMenu.svelte';
+  import GameControls from './lib/GameControls.svelte';
+  import ResultsSlip from './lib/ResultsSlip.svelte';
   import GameOverModal from './lib/GameOverModal.svelte';
   import HowToPlayModal from './lib/HowToPlayModal.svelte';
   import { game } from './game/gameState.svelte';
-  import type { SceneState } from './game/render/scene';
+  import { traceBeam } from './game/beam';
+  import { ARENA } from './game/level';
+  import type { Segment } from './game/types';
 
-  let showHowToPlay = $state(false);
+  let showHelp = $state(false);
 
-  // Dynamic scene projection for the canvas
-  const scene: SceneState = $derived({
-    phase: game.phase,
-    plan: game.plan,
-    angle: game.angle,
-    segments: game.segments,
-    results: game.results ? game.results.results : null,
-    beamProgress: game.beamProgress,
-    studyCountdown: game.studyCountdown,
-    assist: game.settings.assist,
-    burntTargetIds: game.burntTargetIds,
+  const scene = $derived.by(() => {
+    const plan = game.plan;
+    let solutionSegments: Segment[] = [];
+    // A page only counts as clean when every target burns; anything less shows
+    // the route it wanted, passed or not.
+    const missed = Boolean(plan && game.results && game.results.hits < game.results.total);
+
+    if (missed && plan && Number.isFinite(plan.solutionAngle)) {
+      const absorbers = plan.pieces.filter((piece) => piece.kind === 'absorber').map((piece) => piece.rect);
+      solutionSegments = traceBeam(
+        plan.player,
+        plan.solutionAngle,
+        ARENA,
+        plan.obstacles,
+        plan.maxBounces,
+        plan.mirrors,
+        absorbers,
+      ).segments;
+    }
+
+    return {
+      phase: game.phase,
+      plan,
+      angle: game.angle,
+      segments: game.segments,
+      results: game.results ? game.results.results : null,
+      beamProgress: game.beamProgress,
+      studyCountdown: game.studyCountdown,
+      studyEndsAt: game.studyEndsAt,
+      previewActive: game.previewActive,
+      previewSegments: game.previewSegments,
+      solutionSegments,
+      reducedMotion: game.settings.reducedMotion,
+      failedReveal: missed,
+      burntTargetIds: game.burntTargetIds,
+    };
   });
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
+  function isTypingTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+  }
+
+  function isButtonTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    const tag = target.tagName;
+    return tag === 'BUTTON' || tag === 'A' || target.closest('button, a') !== null;
+  }
+
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // fullscreen is unavailable in this browser or blocked by the page context
     }
   }
 
-  onMount(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-
-      if (e.code === 'Space') {
-        e.preventDefault();
-        if (showHowToPlay) {
-          showHowToPlay = false;
-        } else if (game.phase === 'menu') {
-          game.startGame();
-        } else if (game.phase === 'study') {
-          game.enterAimPhase();
-        } else if (game.phase === 'aim') {
-          game.fireLaser();
-        } else if (game.phase === 'reveal') {
-          game.nextRound();
-        } else if (game.phase === 'gameover') {
-          game.retryGame();
-        }
-      } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
-        if (game.phase === 'aim') {
-          e.preventDefault();
-          game.adjustAngle(-0.025);
-        }
-      } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
-        if (game.phase === 'aim') {
-          e.preventDefault();
-          game.adjustAngle(0.025);
-        }
-      } else if (e.code === 'KeyM') {
-        game.toggleSound();
-      } else if (e.code === 'KeyF') {
-        toggleFullscreen();
-      } else if (e.code === 'Escape') {
-        if (showHowToPlay) {
-          showHowToPlay = false;
-        } else if (game.phase !== 'menu') {
-          game.goToMenu();
-        }
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      if (showHelp) {
+        event.preventDefault();
+        showHelp = false;
       }
+      return;
     }
 
+    if (showHelp) return;
+
+    if (isTypingTarget(event.target)) return;
+
+    if (event.key === '?') {
+      event.preventDefault();
+      showHelp = true;
+      return;
+    }
+
+    // Let a focused button handle its own activation, so Space never fires twice.
+    if (isButtonTarget(event.target) && (event.code === 'Space' || event.key === 'Enter')) {
+      return;
+    }
+
+    if (event.code === 'Space') {
+      event.preventDefault();
+      game.advance();
+      return;
+    }
+
+    if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
+      if (game.phase === 'aim') {
+        event.preventDefault();
+        game.adjustAngle(event.shiftKey ? -0.004 : -0.02);
+      }
+      return;
+    }
+
+    if (event.code === 'ArrowRight' || event.code === 'KeyD') {
+      if (game.phase === 'aim') {
+        event.preventDefault();
+        game.adjustAngle(event.shiftKey ? 0.004 : 0.02);
+      }
+      return;
+    }
+
+    if (event.code === 'KeyI') {
+      if (game.phase === 'aim') {
+        event.preventDefault();
+        game.useInk();
+      }
+      return;
+    }
+
+    if (event.code === 'KeyV') {
+      game.toggleReducedMotion();
+      return;
+    }
+
+    if (event.code === 'KeyM') {
+      game.toggleSound();
+      return;
+    }
+
+    if (event.code === 'KeyF') {
+      toggleFullscreen();
+    }
+  }
+
+  $effect(() => {
+    document.documentElement.dataset.motion = game.settings.reducedMotion ? 'reduced' : 'full';
+  });
+
+  onMount(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 </script>
 
-<main class="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#20150d] p-2 sm:p-4 lg:p-6 text-[#181512]">
-  <!-- Cardboard desk texture backdrop pattern -->
-  <div class="pointer-events-none absolute inset-0 opacity-25 bg-[radial-gradient(#d97706_1.5px,transparent_1.5px)] [background-size:28px_28px]"></div>
+<main class="app" class:is-playing={game.phase !== 'menu'}>
+  {#if game.phase === 'menu'}
+    <StartMenu
+      onStart={(seed) => game.startGame(seed)}
+      onHowToPlay={() => (showHelp = true)}
+      onFullscreen={toggleFullscreen}
+    />
+  {:else}
+    <GameCanvas
+      {scene}
+      onAim={(angle) => game.setAimAngle(angle)}
+      onAdvance={() => game.advance()}
+      onResize={() => game.syncPlayfield()}
+    />
 
-  <!-- PC screen optimized container: scales up to 1540px wide and fits comfortably on desktop -->
-  <div class="relative z-10 flex w-full max-w-[min(1540px,96vw)] flex-col items-center justify-center">
-    {#if game.phase === 'menu'}
-      <StartMenu
-        onStart={() => game.startGame()}
-        onHowToPlay={() => (showHowToPlay = true)}
-        onFullscreen={toggleFullscreen}
-      />
-    {:else}
-      <!-- Gameplay Screen with Geometry Dash proportions scaled for PC -->
-      <div class="flex w-full flex-col">
-        <HudBar
-          onFire={() => game.fireLaser()}
-          onNext={() => game.nextRound()}
-          onMenu={() => game.goToMenu()}
-          onFullscreen={toggleFullscreen}
-        />
+    <HudBar
+      onMenu={() => game.goToMenu()}
+      onHelp={() => (showHelp = true)}
+      onFullscreen={toggleFullscreen}
+    />
 
-        <div class="mx-auto w-full max-w-[min(1500px,calc((100vh-170px)*1.6))]">
-          <GameCanvas
-            {scene}
-            onAim={(angle) => game.setAimAngle(angle)}
-          />
-        </div>
-      </div>
-    {/if}
-  </div>
+    <ResultsSlip />
 
-  <!-- Game Over Modal -->
-  {#if game.phase === 'gameover'}
+    <GameControls onAdvance={() => game.advance()} />
+  {/if}
+
+  {#if game.phase === 'gameover' || game.phase === 'victory'}
     <GameOverModal
       onRetry={() => game.retryGame()}
+      onNewRun={() => game.newRun()}
       onMenu={() => game.goToMenu()}
     />
   {/if}
 
-  <!-- How to Play Modal -->
-  {#if showHowToPlay}
-    <HowToPlayModal onClose={() => (showHowToPlay = false)} />
+  {#if showHelp}
+    <HowToPlayModal onClose={() => (showHelp = false)} />
   {/if}
 </main>
+
+<style>
+  .app {
+    position: relative;
+    min-height: 100dvh;
+  }
+
+  .app:not(.is-playing) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
