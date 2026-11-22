@@ -201,7 +201,7 @@
     display: flex;
     align-items: center;
     gap: 0;
-    border: 1px dashed rgba(251, 244, 227, 0.5);
+    border: 3px dashed rgba(251, 244, 227, 0.62);
     border-radius: 2px;
     overflow: hidden;
   }
@@ -241,7 +241,7 @@
     gap: 8px 12px;
     max-width: 100%;
     padding: 8px 14px;
-    border: 1px dashed rgba(251, 244, 227, 0.5);
+    border: 3px dashed rgba(251, 244, 227, 0.62);
     border-radius: 2px;
   }
 
@@ -282,7 +282,7 @@
     min-height: 40px;
     padding: 2px 2px 5px;
     border: 0;
-    border-bottom: 1px dashed rgba(251, 244, 227, 0.55);
+    border-bottom: 3px dashed rgba(251, 244, 227, 0.62);
     border-radius: 0;
     background: transparent;
     color: var(--color-paper);
