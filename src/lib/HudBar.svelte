@@ -38,7 +38,7 @@
   </div>
 
   <nav class="tools" aria-label="Game controls">
-    <button class="tool" type="button" onclick={onMenu} title="Home" aria-label="Back to the home screen">
+    <button class="tool" type="button" onclick={onMenu} title="Menu (Esc)" aria-label="Open the exit menu">
       <Icon name="home" size={19} />
     </button>
     <button class="tool" type="button" onclick={onHelp} title="How to play (?)" aria-label="How to play">

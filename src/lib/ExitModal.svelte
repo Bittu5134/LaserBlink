@@ -15,7 +15,12 @@
 
 <div class="veil" role="presentation">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exit-title">
-    <h2 id="exit-title">Leave the field?</h2>
+    <header class="head">
+      <h2 id="exit-title">Leave the field?</h2>
+      <button class="close" type="button" onclick={onResume} title="Close (Esc)" aria-label="Close">
+        <Icon name="close" size={19} />
+      </button>
+    </header>
 
     <div class="actions">
       <button class="btn btn-primary wide" type="button" onclick={onResume}>
@@ -26,11 +31,9 @@
       {#if game.mode === 'endless'}
         <button class="btn" type="button" onclick={onEndRun}>End run</button>
       {:else}
-        <button class="btn btn-quiet" type="button" onclick={onHome}>Home</button>
+        <button class="btn" type="button" onclick={onHome}>Home</button>
       {/if}
     </div>
-
-    <p class="hint"><span class="key">Esc</span> closes this</p>
   </div>
 </div>
 
@@ -59,14 +62,40 @@
     animation: var(--animate-pop-in);
   }
 
-  h2 {
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--color-ink);
+  }
+
+  h2 {
     font-family: var(--font-display);
     font-size: clamp(1.7rem, 4.6vw, 2.1rem);
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.03em;
+  }
+
+  .close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 1px solid var(--color-paper-edge);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--color-ink-soft);
+  }
+
+  .close:hover {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
   }
 
   .actions {
@@ -85,14 +114,6 @@
   .actions .btn {
     min-height: 46px;
     font-size: 0.875rem;
-  }
-
-  .hint {
-    margin-top: 14px;
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: var(--color-ink-soft);
   }
 
   @media (max-width: 400px) {

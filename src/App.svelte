@@ -178,7 +178,7 @@
     />
 
     <HudBar
-      onMenu={() => game.goToMenu()}
+      onMenu={() => (showExit = true)}
       onHelp={() => (showHelp = true)}
       onFullscreen={toggleFullscreen}
     />

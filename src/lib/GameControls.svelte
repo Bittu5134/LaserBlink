@@ -26,8 +26,6 @@
 </script>
 
 <aside class="rail rail-right">
-  <p class="keys" aria-hidden="true">Left click / Space</p>
-
   <button class="action" type="button" onclick={onAdvance} disabled={game.phase === 'firing'}>
     {#if game.phase === 'aim'}
       <Icon name="fire" size={22} />
@@ -51,23 +49,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 6px;
     width: 148px;
-  }
-
-  .keys {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 34px;
-    border: 1px solid rgba(247, 235, 208, 0.2);
-    border-radius: 2px;
-    background: rgba(28, 19, 11, 0.74);
-    font-family: var(--font-mono);
-    font-size: 0.8125rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    color: #fbf3e1;
   }
 
   .action {
@@ -119,10 +101,6 @@
       left: 10px;
       right: 10px;
       width: auto;
-    }
-
-    .keys {
-      display: none;
     }
 
     .action {
