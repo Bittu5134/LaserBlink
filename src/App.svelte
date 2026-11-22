@@ -23,9 +23,16 @@
     burntTargetIds: game.burntTargetIds,
   });
 
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
   onMount(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Ignore if user is in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       if (e.code === 'Space') {
@@ -55,6 +62,8 @@
         }
       } else if (e.code === 'KeyM') {
         game.toggleSound();
+      } else if (e.code === 'KeyF') {
+        toggleFullscreen();
       } else if (e.code === 'Escape') {
         if (showHowToPlay) {
           showHowToPlay = false;
@@ -69,29 +78,34 @@
   });
 </script>
 
-<main class="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#241a12] p-3 sm:p-6 text-[#181512]">
+<main class="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#20150d] p-2 sm:p-4 lg:p-6 text-[#181512]">
   <!-- Cardboard desk texture backdrop pattern -->
-  <div class="pointer-events-none absolute inset-0 opacity-25 bg-[radial-gradient(#d97706_1px,transparent_1px)] [background-size:24px_24px]"></div>
+  <div class="pointer-events-none absolute inset-0 opacity-25 bg-[radial-gradient(#d97706_1.5px,transparent_1.5px)] [background-size:28px_28px]"></div>
 
-  <div class="relative z-10 w-full max-w-5xl">
+  <!-- PC screen optimized container: scales up to 1540px wide and fits comfortably on desktop -->
+  <div class="relative z-10 flex w-full max-w-[min(1540px,96vw)] flex-col items-center justify-center">
     {#if game.phase === 'menu'}
       <StartMenu
         onStart={() => game.startGame()}
         onHowToPlay={() => (showHowToPlay = true)}
+        onFullscreen={toggleFullscreen}
       />
     {:else}
-      <!-- Gameplay Screen with Geometry Dash proportions -->
-      <div class="mx-auto flex flex-col">
+      <!-- Gameplay Screen with Geometry Dash proportions scaled for PC -->
+      <div class="flex w-full flex-col">
         <HudBar
           onFire={() => game.fireLaser()}
           onNext={() => game.nextRound()}
           onMenu={() => game.goToMenu()}
+          onFullscreen={toggleFullscreen}
         />
 
-        <GameCanvas
-          {scene}
-          onAim={(angle) => game.setAimAngle(angle)}
-        />
+        <div class="mx-auto w-full max-w-[min(1500px,calc((100vh-170px)*1.6))]">
+          <GameCanvas
+            {scene}
+            onAim={(angle) => game.setAimAngle(angle)}
+          />
+        </div>
       </div>
     {/if}
   </div>
