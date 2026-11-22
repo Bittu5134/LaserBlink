@@ -114,7 +114,7 @@
     color: #fbf3e1;
     font-family: var(--font-mono);
     font-size: 0.875rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     transition:
@@ -185,7 +185,7 @@
     background: rgba(24, 16, 10, 0.9);
     font-family: var(--font-mono);
     font-size: 0.8125rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.04em;
     color: #fbf3e1;
   }

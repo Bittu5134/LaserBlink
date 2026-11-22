@@ -113,7 +113,7 @@
   .page-now {
     font-family: var(--font-mono);
     font-size: 1.75rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1;
     letter-spacing: -0.04em;
   }
@@ -121,7 +121,7 @@
   .page-total {
     font-family: var(--font-mono);
     font-size: 0.95rem;
-    font-weight: 700;
+    font-weight: 800;
     opacity: 0.74;
   }
 
@@ -154,7 +154,7 @@
   .chip-label {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     opacity: 0.72;
@@ -163,7 +163,7 @@
   .score-chip strong {
     font-family: var(--font-mono);
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.03em;
   }

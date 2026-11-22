@@ -7,12 +7,14 @@
   import ResultsSlip from './lib/ResultsSlip.svelte';
   import GameOverModal from './lib/GameOverModal.svelte';
   import HowToPlayModal from './lib/HowToPlayModal.svelte';
+  import ExitModal from './lib/ExitModal.svelte';
   import { game } from './game/gameState.svelte';
   import { traceBeam } from './game/beam';
   import { ARENA } from './game/level';
   import type { Segment } from './game/types';
 
   let showHelp = $state(false);
+  let showExit = $state(false);
 
   const scene = $derived.by(() => {
     const plan = game.plan;
@@ -78,14 +80,18 @@
 
   function handleKeyDown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
+      event.preventDefault();
       if (showHelp) {
-        event.preventDefault();
         showHelp = false;
+      } else if (showExit) {
+        showExit = false;
+      } else if (game.phase !== 'menu' && game.phase !== 'gameover' && game.phase !== 'victory') {
+        showExit = true;
       }
       return;
     }
 
-    if (showHelp) return;
+    if (showHelp || showExit) return;
 
     if (isTypingTarget(event.target)) return;
 
@@ -192,6 +198,20 @@
 
   {#if showHelp}
     <HowToPlayModal onClose={() => (showHelp = false)} />
+  {/if}
+
+  {#if showExit}
+    <ExitModal
+      onResume={() => (showExit = false)}
+      onRestart={() => {
+        showExit = false;
+        game.retryGame();
+      }}
+      onHome={() => {
+        showExit = false;
+        game.goToMenu();
+      }}
+    />
   {/if}
 </main>
 

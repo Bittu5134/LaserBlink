@@ -12,7 +12,7 @@
       <span class="stars" aria-label={`${result.stars} of 3 stars`}>
         {#each Array(3) as _, index}
           <span class:star-empty={index >= result.stars}>
-            <Icon name="star" size={19} strokeWidth={1.2} />
+            <Icon name="star" size={19} strokeWidth={1.9} />
           </span>
         {/each}
       </span>
@@ -103,7 +103,7 @@
   .result-stats dt {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.09em;
     text-transform: uppercase;
     opacity: 0.68;
@@ -113,7 +113,7 @@
     margin: 0;
     font-family: var(--font-mono);
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1;
   }
 

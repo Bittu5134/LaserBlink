@@ -26,7 +26,7 @@
     strokeWidth?: number;
   }
 
-  let { name, size = 18, strokeWidth = 1.7 }: Props = $props();
+  let { name, size = 18, strokeWidth = 2.2 }: Props = $props();
 </script>
 
 <svg
