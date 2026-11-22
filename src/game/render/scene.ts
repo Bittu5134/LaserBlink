@@ -102,9 +102,9 @@ function drawPlayer(ctx: CanvasRenderingContext2D, pos: Vec2, angle: number, arm
   ctx.rotate(angle);
 
   ctx.beginPath();
-  ctx.moveTo(28, 0);
-  ctx.lineTo(14, -8);
-  ctx.lineTo(14, 8);
+  ctx.moveTo(34, 0);
+  ctx.lineTo(18, -9);
+  ctx.lineTo(18, 9);
   ctx.closePath();
   ctx.fillStyle = BEAM;
   ctx.fill();
@@ -114,17 +114,12 @@ function drawPlayer(ctx: CanvasRenderingContext2D, pos: Vec2, angle: number, arm
   ctx.restore();
 
   ctx.beginPath();
-  ctx.arc(pos.x, pos.y, 17, 0, Math.PI * 2);
+  ctx.arc(pos.x, pos.y, 21, 0, Math.PI * 2);
   ctx.fillStyle = armed ? PAPER : '#e8dcc4';
   ctx.fill();
   ctx.strokeStyle = INK;
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3;
   ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
-  ctx.fillStyle = BEAM;
-  ctx.fill();
 }
 
 function drawAim(

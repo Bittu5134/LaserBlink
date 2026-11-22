@@ -68,3 +68,11 @@ export interface ScoreEntry {
   round: number;
   date: number;
 }
+
+export interface RunSummary {
+  score: number;
+  accuracy: number;
+  rounds: RoundResult[];
+  hits: number;
+  targets: number;
+}

@@ -2,7 +2,7 @@ import type { Rect, RoundPlan, Target, Vec2 } from './types';
 
 export const ARENA: Rect = { x: 30, y: 30, w: 940, h: 565 };
 export const CANVAS = { w: 1000, h: 625 };
-export const TARGET_RADIUS = 19;
+export const TARGET_RADIUS = 24;
 export const PALETTE = ['#fde047', '#86efac', '#c4b5fd', '#38bdf8', '#ffb199'];
 
 const counts = [2, 2, 3, 3, 4, 4, 5, 5];
