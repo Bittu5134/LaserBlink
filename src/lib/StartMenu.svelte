@@ -230,11 +230,14 @@
   .difficulty {
     display: flex;
     align-items: center;
-    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    max-width: 100%;
   }
 
   .slider {
-    width: min(260px, 60vw);
+    width: min(240px, 52vw);
     accent-color: var(--color-laser);
   }
 
@@ -322,7 +325,24 @@
 
   @media (max-width: 460px) {
     .menu-screen {
-      gap: 24px;
+      gap: 22px;
+      padding: 20px 16px;
+    }
+
+    .mode-row {
+      width: 100%;
+      max-width: 330px;
+    }
+
+    .mode-btn {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 0 10px;
+      font-size: 0.875rem;
+    }
+
+    .slider {
+      width: min(190px, 46vw);
     }
 
     .play-btn {
