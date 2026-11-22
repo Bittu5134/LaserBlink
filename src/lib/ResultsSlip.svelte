@@ -37,7 +37,7 @@
     z-index: 11;
     top: clamp(10px, 2vh, 18px);
     left: 50%;
-    transform: translateX(-50%);
+    translate: -50% 0;
     display: flex;
     align-items: center;
     gap: 18px;
@@ -128,7 +128,7 @@
       bottom: 126px;
       left: 12px;
       right: 12px;
-      transform: none;
+      translate: 0 0;
       flex-wrap: wrap;
       gap: 8px 16px;
     }
